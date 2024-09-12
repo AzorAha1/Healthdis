@@ -89,16 +89,16 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', title='Admin Dashboard')
 
 @app.route('/clinical/dashboard')
-@login_required
-@role_required('clinical-services')
+# @login_required
+# @role_required('clinical-services')
 def clinical_dashboard():
-    return render_template('clinical_dashboard.html', title='Clinical Dashboard')
+    return render_template('clinical_dashbaord.html', title='Clinical Dashboard')
 
 @app.route('/medpay/dashboard')
 @login_required
 @role_required('medpay-user')
 def medpay_dashboard():
-    return render_template('medpay_dashboard.html', title='MedPay Dashboard')
+    return render_template('medpay/medpay_dashboard.html', title='MedPay Dashboard')
 
 @app.route('/admin/add_user', methods=['GET', 'POST'])
 @login_required

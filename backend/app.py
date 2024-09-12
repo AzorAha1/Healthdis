@@ -92,7 +92,7 @@ def admin_dashboard():
 # @login_required
 # @role_required('clinical-services')
 def clinical_dashboard():
-    return render_template('clinical_dashbaord.html', title='Clinical Dashboard')
+    return render_template('clinical_dashboard.html', title='Clinical Dashboard')
 
 @app.route('/medpay/dashboard')
 @login_required

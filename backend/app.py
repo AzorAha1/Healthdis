@@ -125,7 +125,7 @@ def add_user():
 
 @app.route('/logout')
 def logout():
-    session.clear()  # Clear session data
+    session.pop('email', None)  # Clear session data
     return redirect(url_for('login'))
 
 # Run the Flask application

@@ -145,12 +145,10 @@ def delete_employee(employee_id):
         pass
     return render_template('edit_user.html', employee=employee)
 # Clinical services dashboard
-@app.route('/clinical/')
 @app.route('/clinical/dashboard')
-# @login_required
-# @role_required('clinical-services')
 def clinical_dashboard():
-    return render_template('clinical_dashboard.html', title='Clinical Dashboard')
+    ward_name = session['ward']['name']
+    return render_template('clinical_dashboard.html', ward_name=ward_name, title='Clinical Dashboard')
 
 @app.route('/clinical/patient_list')
 def patient_list():
@@ -437,8 +435,18 @@ def delete_department(department_id):
 @app.route('/clinical/ward_login', methods=['GET', 'POST'])
 def ward_login():
     departments = mongo.db.departments.find()
+    if request.method == 'POST':
+        selected_ward_id = request.form.get('ward')
+        if selected_ward_id:
+            selected_ward = mongo.db.departments.find_one({'_id': ObjectId(selected_ward_id)})
+            if selected_ward:
+                session['ward'] = {
+                    'id': str(selected_ward['_id']),
+                    'name': selected_ward['name']
+                }
+                print(f'Selected Ward: {session["ward"]}')
+                return redirect(url_for('clinical_dashboard'))
     return render_template('ward_login.html', title='Ward Login', departments=departments)
-# Logout route
 @app.route('/logout')
 def logout():
     session.pop('email', None)

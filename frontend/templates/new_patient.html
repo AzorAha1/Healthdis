@@ -1,0 +1,102 @@
+{% include 'include_clinical/header.html' %}
+{% include 'include_clinical/sidebar.html' %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>New Patient Enrollment</h1>
+        <ol class="breadcrumb">
+            <li><a href="{{ url_for('clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li class="active">New Patient Enrollment</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Enter Patient Information</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <form method="POST" action="{{ url_for('new_patient') }}">
+                        <div class="box-body">
+                            <!-- Row 1: First name, Middle name, Surname -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="patient_first_name">First Name</label>
+                                        <input type="text" class="form-control" name="patient_first_name" placeholder="Enter first name" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="patient_middle_name">Middle Name</label>
+                                        <input type="text" class="form-control" name="patient_middle_name" placeholder="Enter middle name">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="patient_surname_name">Surname</label>
+                                        <input type="text" class="form-control" name="patient_surname_name" placeholder="Enter surname" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Date of Birth, Gender -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="dob">Date of Birth</label>
+                                        <input type="date" class="form-control" name="age" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="gender">Gender</label>
+                                        <select class="form-control" name="gender" required>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Phone numbers, Address -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="patient-pno">Phone Number</label>
+                                        <input type="text" class="form-control" name="patient-pno" placeholder="Enter phone number">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="patient-nextofkinpno">Next of Kin Phone Number</label>
+                                        <input type="text" class="form-control" name="patient-nextofkinpno" placeholder="Enter next of kin's phone number">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 4: Address -->
+                            <div class="form-group">
+                                <label for="address">Address</label>
+                                <textarea class="form-control" name="address" rows="3" placeholder="Enter patient's address"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- /.box-body -->
+                        <div class="box-footer">
+                            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.box -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+    <!-- /.content -->
+</div>
+
+{% include 'include_clinical/footer.html' %} this will be just the update_patient just at the values 

@@ -1,35 +1,65 @@
 {% include 'include_clinical/header.html' %}
- {% include 'include_clinical/sidebar.html' %}
+{% include 'include_clinical/sidebar.html' %}
+
 <div class="content-wrapper">
-<section class="content-header">
-      <h1>
-        Dashboard
-        <small></small>
-      </h1>
-      <ol class="breadcrumb">
-        <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-        <li class="active">Dashboard</li>
-      </ol>
+    <section class="content-header">
+        <h1>
+            Dashboard
+            <small></small>
+        </h1>
+        <ol class="breadcrumb">
+            <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li class="active">Dashboard</li>
+        </ol>
     </section>
+
     <section class="content">
-      <div class="row">
+        <!-- Display Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <div id="flash-messages" class="alert-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         
-      </div>
-      <!-- /.row -->
-      <!-- Main row -->
-      <div class="row">
-      <!-- /.col -->
-        <div class="col-md-12">
-          <div class="box box-primary">
-            
-            <!-- /.box-body -->
-          </div>
-          <!-- /. box -->
+        <div class="row">
+            <!-- Your existing content here -->
         </div>
-        <!-- /.col -->
-    
-      </div>
+        <!-- /.row -->
+
+        <!-- Main row -->
+        <div class="row">
+            <!-- /.col -->
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <!-- /.box-body -->
+                </div>
+                <!-- /.box -->
+            </div>
+            <!-- /.col -->
+        </div>
     </section>
     <!-- /.content -->
-  </div>
-  {% include 'include_clinical/footer.html' %}
+</div>
+
+{% include 'include_clinical/footer.html' %}
+
+<!-- Add the JavaScript to hide flash messages after a delay -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const flashMessages = document.getElementById('flash-messages');
+        if (flashMessages) {
+            setTimeout(() => {
+                flashMessages.style.opacity = 0;
+                setTimeout(() => {
+                    flashMessages.remove();
+                }, 500); // Match this with the CSS transition duration
+            }, 3000); // Time in milliseconds (3 seconds)
+        }
+    });
+</script>

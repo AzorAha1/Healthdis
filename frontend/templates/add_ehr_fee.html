@@ -1,0 +1,51 @@
+{% include 'include_admin/header.html' %}
+{% include 'include_admin/sidebar.html' %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>Add New EHR Fee</h1>
+        <ol class="breadcrumb">
+            <li><a href="{{ url_for('admin_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="{{ url_for('manage_ehr_fees') }}">Manage EHR Fees</a></li>
+            <li class="active">Add EHR Fee</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Enter EHR Fee Information</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <form method="POST" action="{{ url_for('add_ehr_fee') }}">
+                        <div class="form-group">
+                            <label for="name">Name:</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="department">Department:</label>
+                            <input type="text" class="form-control" id="department" name="department" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="unit">Unit:</label>
+                            <input type="text" class="form-control" id="unit" name="unit" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cost">Cost:</label>
+                            <input type="text" class="form-control" id="cost" name="cost" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add EHR Fee</button>
+                    </form>
+                </div>
+                <!-- /.box -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+    <!-- /.content -->
+</div>
+
+{% include 'include_admin/footer.html' %}

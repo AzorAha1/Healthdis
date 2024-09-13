@@ -116,26 +116,28 @@ small {
     margin-bottom: 20px;
 }
 
-.alert {
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 10px;
+/* Add this to your CSS file */
+.alert-container {
+    transition: opacity 0.5s ease-out;
 }
 
-.alert-danger {
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-    color: #721c24;
+.alert {
+    margin-bottom: 15px;
 }
 
 .alert-success {
     background-color: #d4edda;
-    border-color: #c3e6cb;
     color: #155724;
 }
 
-.alert-warning {
-    background-color: #fff3cd;
-    border-color: #ffeeba;
-    color: #856404;
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.popup {
+    width: 50px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: hsla(211, 97%, 48%, 0.585);
 }

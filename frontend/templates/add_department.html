@@ -19,23 +19,28 @@
                     </div>
                     <form method="POST" action="{{ url_for('add_department') }}">
                         <div class="form-group">
-                            <label for="name">Name:</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
+                            <label for="department_name">Department name:</label>
+                            <input type="text" class="form-control" id="department_name" name="department_name" required>
                         </div>
                         <div class="form-group">
-                            <label for="type">Type:</label>
-                            <select class="form-control" id="type" name="type" required>
-                                <option value="ward">Ward</option>
-                                <option value="clinic">Clinic</option>
-                                <option value="other">Other</option>
-                                <!-- Add more types as needed -->
-                            </select>
+                            <label for="department_id">Department ID:</label>
+                            <input type="text" class="form-control" id="department_id" name="department_id" required>
                         </div>
-                        <div class="form-group">
-                            <label for="bed_fee">Bed Fee:</label>
-                            <input type="number" step="0.01" class="form-control" id="bed_fee" name="bed_fee" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Department</button>
+                        <div class="form-group"></div>
+                            <label for="department_abbreviation">Department Abbreviation:</label>
+                            <input type="text" class="form-control" id="department_abbreviation" name="department_abbreviation" required>
+                            <div class="form-group">
+                                <label for="department_type">Department Type:</label>
+                                <select class="form-control" id="department_typ" name="department_typ" required>
+                                    <option value="ward">Clinical</option>
+                                    <option value="clinic">Ward</option>
+                                    <option value="lab">Lab</option>
+                                    <option value="others">Others</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Add Department</button>
+                    </div>
                     </form>
                 </div>
             </div>

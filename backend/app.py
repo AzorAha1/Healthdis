@@ -1,5 +1,6 @@
 import uuid
 from bson import ObjectId
+from bson.errors import InvalidId
 from flask import Flask, flash, render_template, request, redirect, url_for, session
 from flask_pymongo import PyMongo
 from functools import wraps
@@ -342,23 +343,23 @@ def employee_list():
     return render_template('employee_list.html', title='Employee List', employees=all_employees)
 @app.route('/admin/add_ehr_fee', methods=['GET', 'POST'])
 def add_ehr_fee():
+    departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
     if request.method == 'POST':
-        name = request.form.get('name')
-        department = request.form.get('department')
-        unit = request.form.get('unit')
-        cost = request.form.get('cost')
+        name = request.form.get('service_name')
+        department = request.form.get('department_name')
+        code = request.form.get('service_code')
+        fee = request.form.get('service_fee')
 
         # Insert the new fee into the database
         mongo.db.ehr_fees.insert_one({
-            'name': name,
-            'department': department,
-            'unit': unit,
-            'cost': cost
+            'service_name': name,
+            'department_name': department,
+            'service_code': code,
+            'service_fee': fee
         })
         
         return redirect(url_for('manage_ehr_fees'))
-    
-    return render_template('add_ehr_fee.html')
+    return render_template('add_ehr_fee.html', departments=departments)
 @app.route('/admin/mange_ehr_fees', methods=['GET', 'POST'])
 def manage_ehr_fees():
     """Display the EHR Fees table and handle adding new fees."""
@@ -382,22 +383,44 @@ def manage_ehr_fees():
     return render_template('ehr_fees.html', title='EHR Fees', fees=fees)
 
 
-@app.route('/admin/manage_ehr_fees/delete/<fee_id>', methods=['POST'])
+@app.route('/admin/delete_ehr_fee/<fee_id>')
 def delete_ehr_fee(fee_id):
-    """Delete an EHR fee."""
+    """Delete an EHR Fee"""
     mongo.db.ehr_fees.delete_one({'_id': ObjectId(fee_id)})
-    return redirect(url_for('ehr_fees'))
+    flash('EHR Fee deleted successfully!', 'success')
+    return redirect(url_for('manage_ehr_fees'))
 
 
-@app.route('/admin/manage_ehr_fees/edit/<fee_id>', methods=['POST'])
+@app.route('/admin/edit_ehr_fee/<fee_id>', methods=['GET', 'POST'])
 def edit_ehr_fee(fee_id):
-    """Update the cost of an EHR fee."""
-    new_cost = float(request.form['cost'])
-    mongo.db.ehr_fees.update_one(
-        {'_id': ObjectId(fee_id)},
-        {'$set': {'cost': new_cost}}
-    )
-    return redirect(url_for('ehr_fees'))
+    """Edit an existing EHR Fee"""
+    try:
+        fee = mongo.db.ehr_fees.find_one_or_404({'_id': ObjectId(fee_id)})
+    except InvalidId:
+        flash('Invalid EHR Fee ID', 'error')
+        return redirect(url_for('manage_ehr_fees'))
+
+    departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
+    
+    if request.method == 'POST':
+        department_name = request.form.get('department_name')
+        service_name = request.form.get('service_name')
+        service_code = request.form.get('service_code')
+        service_fee = request.form.get('service_fee')
+
+        mongo.db.ehr_fees.update_one(
+            {'_id': ObjectId(fee_id)},
+            {'$set': {
+                'department_name': department_name,
+                'service_name': service_name,
+                'service_code': service_code,
+                'service_fee': service_fee
+            }}
+        )
+        flash('EHR Fee updated successfully!', 'success')
+        return redirect(url_for('manage_ehr_fees'))
+    
+    return render_template('edit_ehr_fees.html', title='Edit EHR Fee', fee=fee, departments=departments)
 
 @app.route('/admin/list_departments')
 def list_departments():
@@ -409,43 +432,57 @@ def list_departments():
 def add_department():
     """Add a new department"""
     if request.method == 'POST':
-        name = request.form.get('name')
-        type_ = request.form.get('type')
-        bed_fee = float(request.form.get('bed_fee'))
+        department_name = request.form.get('department_name')
+        department_id = request.form.get('department_id')
+        department_typ = request.form.get('department_typ')
+        department_select = request.form.get('department_select')
+        department_abbreviation = request.form.get('department_abbreviation')
         
         mongo.db.departments.insert_one({
-            'name': name,
-            'type': type_,
-            'bed_fee': bed_fee
+            'department_name': department_name,
+            'department_id': department_id,
+            'department_typ': department_typ,
+            'department_abbreviation': department_abbreviation
         })
+        
         flash('Department added successfully!', 'success')
         return redirect(url_for('list_departments'))
-
+    
     return render_template('add_department.html', title='Add Department')
 
 @app.route('/admin/edit_department/<department_id>', methods=['GET', 'POST'])
 def edit_department(department_id):
     """Edit an existing department"""
-    department = mongo.db.departments.find_one_or_404({'_id': department_id})
+    try:
+        department = mongo.db.departments.find_one_or_404({'_id': ObjectId(department_id)})
+    except InvalidId:
+        flash('Invalid department ID', 'error')
+        return redirect(url_for('list_departments'))
 
     if request.method == 'POST':
-        name = request.form.get('name')
-        type_ = request.form.get('type')
-        bed_fee = int(request.form.get('bed_fee'))
+        department_name = request.form.get('department_name')
+        new_department_id = request.form.get('department_id')
+        department_abbreviation = request.form.get('department_abbreviation')
+        department_typ = request.form.get('department_typ')
         
         mongo.db.departments.update_one(
-            {'_id': department_id},
-            {'$set': {'name': name, 'type': type_, 'bed_fee': bed_fee}}
+            {'_id': ObjectId(department_id)},
+            {'$set': {
+                'department_name': department_name,
+                'department_id': new_department_id,
+                'department_abbreviation': department_abbreviation,
+                'department_typ': department_typ
+            }}
         )
         flash('Department updated successfully!', 'success')
         return redirect(url_for('list_departments'))
-
+    
     return render_template('edit_department.html', title='Edit Department', department=department)
 
 @app.route('/admin/delete_department/<department_id>')
 def delete_department(department_id):
     """Delete a department"""
-    mongo.db.departments.delete_one({'_id': department_id})
+    mongo.db.departments.delete_one({'_id': ObjectId(department_id)})
     flash('Department deleted successfully!', 'success')
     return redirect(url_for('list_departments'))
 

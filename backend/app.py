@@ -154,6 +154,7 @@ def clinical_dashboard():
 def patient_list():
     """this shows the list of patients created"""
     all_patients = mongo.db.patients.find()
+    print(session)
     return render_template('patient_list.html', title='Patient List', patients=all_patients)
 
 @app.route('/clinical/update_patient/<hospital_number>', methods=['GET', 'POST'])
@@ -201,6 +202,22 @@ def search_patient():
             flash('Patient not found.', 'danger')
     
     return render_template('search_patient.html')
+
+@app.route('/clinical/new_request', methods=['GET', 'POST'])
+def new_request():
+    """Route to create a new request."""
+    if request.method == 'POST':
+       ehr_number = request.form.get('ehr_number')
+       patient = mongo.db.patients.find_one({'ehr_number': ehr_number})
+       if patient:
+           session['current_patient'] = {'patient_name': f"{patient['patient_first_name']} {patient['patient_middle_name']} {patient['patient_surname_name']}",
+                                            'ehr_number': patient['ehr_number'],
+                                            'hospital_number': patient['hospital_number']}
+           
+           return redirect(url_for('clinical_dashboard'))
+       else:
+           flash('Patient not found.', 'danger')
+    return render_template('new_request.html')
 @app.route('/clinical/new_patient', methods=['GET', 'POST'])
 # @login_required
 # @role_required('clinical-services')

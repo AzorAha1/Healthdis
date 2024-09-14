@@ -24,49 +24,72 @@ def login_required(f):
     return decorated_function
 
 # Helper function for requiring a specific role
-def role_required(role):
+def role_required(*allowed_roles):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if session.get('role') != role:
+            if 'role' in session and session['role'] in allowed_roles:
+                return f(*args, **kwargs)
+            else:
+                flash('You do not have permission to access this page.', 'danger')
                 return redirect(url_for('login'))
-            return f(*args, **kwargs)
         return decorated_function
     return decorator
-
+# helping function for requiring admin or a specific role
+def admin_or_role_required(required_role):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'role' in session and (session['role'] == 'admin-user' or session['role'] == required_role):
+                return f(*args, **kwargs)
+            else:
+                flash('You do not have permission to access this page.', 'danger')
+                return redirect(url_for('login'))
+        return decorated_function
+    return decorator
 # Login route
+
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        role = request.form.get('role')
-        if role == 'admin-user':
-            adminemail = request.form.get('adminemail')
-            adminpassword = request.form.get('adminpassword')
-            if adminemail == 'admin@email.com' and adminpassword == '123456':
-                session['email'] = adminemail
-                session['role'] = 'admin-user'
-                flash('Admin User logged in successfully', 'success')
-                return redirect(url_for('admin_dashboard'))
-            else:
-                flash('Invalid admin credentials.', 'danger')
-        else:
-            email = request.form.get('email')
-            password = request.form.get('password')
-            user = mongo.db.users.find_one({'email': email, 'role': role})
+        email = request.form.get('email')
+        password = request.form.get('password')
+        selected_role = request.form.get('role')
 
-            if user and check_password_hash(user['password'], password):
-                session['email'] = email
-                session['role'] = role
-                
-                if role == 'medpay-user':
-                    return redirect(url_for('medpay_dashboard'))
-                elif role == 'clinical-services':
-                    return redirect(url_for('clinical_dashboard'))
+        user = mongo.db.users.find_one({'email': email})
+        if user:
+            if check_password_hash(user['password'], password):
+                # Check if user role matches or if the user is an admin
+                if user['role'] == 'admin-user' or user['role'] == selected_role:
+                    session['email'] = email
+                    session['role'] = user['role']
+
+                    # Redirect based on the selected role
+                    if user['role'] == 'admin-user':
+                        if selected_role == 'clinical-services':
+                            flash('Admin logged in as Clinical Services user successfully', 'success')
+                            return redirect(url_for('clinical_dashboard'))
+                        elif selected_role == 'medpay-user':
+                            flash('Admin logged in as MedPay user successfully', 'success')
+                            return redirect(url_for('medpay_dashboard'))
+                        else:
+                            flash('Admin logged in successfully', 'success')
+                            return redirect(url_for('admin_dashboard'))
+                    elif selected_role == 'clinical-services':
+                        flash('Clinical Services user logged in successfully', 'success')
+                        return redirect(url_for('clinical_dashboard'))
+                    elif selected_role == 'medpay-user':
+                        flash('MedPay user logged in successfully', 'success')
+                        return redirect(url_for('medpay_dashboard'))
+                else:
+                    flash('Invalid role', 'danger')
             else:
-                flash('Invalid credentials or role.', 'danger')
-    
+                flash('Invalid password', 'danger')
+        else:
+            flash('User not found', 'danger')
     return render_template('login.html', title='Login')
+
 # Add employee route
 @app.route('/admin/add_employee', methods=['GET', 'POST'])
 @login_required
@@ -105,18 +128,56 @@ def add_employee():
 @login_required
 @role_required('admin-user')
 def admin_dashboard():
-    return render_template('admin_dashboard.html', title='Admin Dashboard')
+    print(session)
+    email_name = session.get('email', 'Guest')
+    return render_template('admin_dashboard.html', title='Admin Dashboard', email_name=email_name)
+
 
 @app.route('/admin/edit_user/<user_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('admin-user')
 def edit_user(user_id):
-    """Route to edit a user."""
-    # Logic to edit the user with the given user_id
+    # Fetch user data from MongoDB
     user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
+    
     if request.method == 'POST':
-        # Handle the form submission to edit the user
-        pass
+        # Get updated values from the form
+        firstname = request.form.get('firstname')
+        middlename = request.form.get('middlename')
+        lastname = request.form.get('lastname')
+        email = request.form.get('email')
+        phonenumber = request.form.get('phonenumber')
+        ippisno = request.form.get('ippisno')
+        department = request.form.get('department')
+        rank = request.form.get('rank')
+        username = request.form.get('username')
+        role = request.form.get('role')  # New role field
+        
+        # Update user data in the database
+        mongo.db.users.update_one(
+            {'_id': ObjectId(user_id)},
+            {'$set': {
+                'firstname': firstname,
+                'middlename': middlename,
+                'lastname': lastname,
+                'email': email,
+                'phonenumber': phonenumber,
+                'ippisno': ippisno,
+                'department': department,
+                'rank': rank,
+                'username': username,
+                'role': role
+            }}
+        )
+        
+        flash('User updated successfully!', 'success')
+        return redirect(url_for('user_list'))
+    
     return render_template('edit_user.html', user=user)
+
 @app.route('/admin/edit_employee/<employee_id>', methods=['GET', 'POST'])
+@role_required('admin-user')
+@login_required
 def edit_employee(employee_id):
     """Route to edit a user."""
     # Logic to edit the user with the given user_id
@@ -127,16 +188,16 @@ def edit_employee(employee_id):
     return render_template('edit_user.html', employee=employee)
 
 
-@app.route('/admin/delete_user/<user_id>', methods=['GET', 'POST'])
+@app.route('/admin/delete_user/<user_id>', methods=['POST'])
+@login_required
+@role_required('admin-user')
 def delete_user(user_id):
-    """Route to edit a user."""
-    # Logic to edit the user with the given user_id
-    user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
-    if request.method == 'POST':
-        # Handle the form submission to edit the user
-        pass
-    return render_template('delete_user.html', user=user)
+    mongo.db.users.delete_one({'_id': ObjectId(user_id)})
+    flash('User deleted successfully!', 'danger')
+    return redirect(url_for('user_list'))
 @app.route('/admin/delete_employee/<employee_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('admin-user')
 def delete_employee(employee_id):
     """Route to edit a user."""
     # Logic to edit the user with the given user_id
@@ -146,12 +207,20 @@ def delete_employee(employee_id):
         pass
     return render_template('edit_user.html', employee=employee)
 # Clinical services dashboard
+
+@app.route('/clinical/')
 @app.route('/clinical/dashboard')
+@login_required
+@role_required('clinical-services', 'admin-user')
 def clinical_dashboard():
-    ward_name = session['ward']['name']
-    return render_template('clinical_dashboard.html', ward_name=ward_name, title='Clinical Dashboard')
+    print(session)
+    # ward_name = session['ward']['name']
+    email_name = session.get('email', 'Guest')
+    return render_template('clinical_dashboard.html', title='Clinical Dashboard', email_name=email_name)
 
 @app.route('/clinical/patient_list')
+@login_required
+@admin_or_role_required('clinical-services')
 def patient_list():
     """this shows the list of patients created"""
     all_patients = mongo.db.patients.find()
@@ -159,6 +228,8 @@ def patient_list():
     return render_template('patient_list.html', title='Patient List', patients=all_patients)
 
 @app.route('/clinical/update_patient/<hospital_number>', methods=['GET', 'POST'])
+@login_required
+@admin_or_role_required('clinical-services')
 def update_patient(hospital_number):
     patient = mongo.db.patients.find_one({'hospital_number': hospital_number})
     timenow = datetime.now()  # Get current date and time
@@ -192,6 +263,8 @@ def update_patient(hospital_number):
     return render_template('update_patient.html', patient=patient)
 
 @app.route('/clinical/search_patient', methods=['GET', 'POST'])
+@login_required
+@admin_or_role_required('clinical-services')
 def search_patient():
     if request.method == 'POST':
         ehr_number = request.form.get('ehr_number')
@@ -205,6 +278,8 @@ def search_patient():
     return render_template('search_patient.html')
 
 @app.route('/clinical/new_request', methods=['GET', 'POST'])
+@login_required
+@admin_or_role_required('clinical-services')
 def new_request():
     """Route to create a new request."""
     if request.method == 'POST':
@@ -219,9 +294,10 @@ def new_request():
        else:
            flash('Patient not found.', 'danger')
     return render_template('new_request.html')
+
 @app.route('/clinical/new_patient', methods=['GET', 'POST'])
-# @login_required
-# @role_required('clinical-services')
+@login_required
+@admin_or_role_required('clinical-services')
 def new_patient():
     timenow = datetime.now()  # Get current date and time
     formatted_time = timenow.strftime('%Y-%m-%d %H:%M:%S %p')
@@ -286,7 +362,7 @@ def new_patient():
 # MedPay dashboard
 @app.route('/medpay/dashboard')
 @login_required
-@role_required('medpay-user')
+@admin_or_role_required('medpay-user')
 def medpay_dashboard():
     return render_template('medpay_dashboard.html', title='MedPay Dashboard')
 
@@ -296,11 +372,18 @@ def medpay_dashboard():
 @role_required('admin-user')
 def add_user():
     if request.method == 'POST':
+        firstname = request.form.get('firstname')
+        middlename = request.form.get('middlename')
+        lastname = request.form.get('lastname')
+        ippisno = request.form.get('ippisno')
+        staff_id = request.form.get('staff_id')
+        rank = request.form.get('rank')
+        username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
         role = request.form.get('role')
         department = request.form.get('department')
-        ehr_number = request.form.get('ehr_number')
+        phonenumber = request.form.get('phonenumber')
 
         # Check if user already exists
         existing_user = mongo.db.users.find_one({'email': email})
@@ -309,39 +392,50 @@ def add_user():
             return redirect(url_for('add_user'))
 
         # Check if EHR number already exists
-        existing_ehr = mongo.db.users.find_one({'ehr_number': ehr_number})
-        if existing_ehr:
-            flash('User with this EHR number already exists.', 'danger')
-            return redirect(url_for('add_user'))
+        # existing_ehr = mongo.db.users.find_one({'ehr_number': ehr_number})
+        # if existing_ehr:
+        #     flash('User with this EHR number already exists.', 'danger')
+        #     return redirect(url_for('add_user'))
 
         hashed_password = generate_password_hash(password)
 
         new_user = {
+            'firstname': firstname,
+            'middlename': middlename,
+            'lastname': lastname,
+            'ippisno': ippisno,
+            'staff_id': staff_id,
+            'rank': rank,
+            'username': username,
+            'phonenumber': phonenumber,
             'email': email,
             'password': hashed_password,
             'role': role,
             'department': department,
-            'ehr_number': ehr_number
         }
         mongo.db.users.insert_one(new_user)
 
-        flash(f'User added successfully with EHR Number: {ehr_number}!', 'success')
+        # flash(f'User added successfully with EHR Number: {ehr_number}!', 'success')
         return redirect(url_for('admin_dashboard'))
 
     return render_template('add_user.html', title='Add User')
 @app.route('/admin/user_list')
+@login_required
+@role_required('admin-user')
 def user_list():
     """this shows the list of users created"""
     all_users = mongo.db.users.find()
     return render_template('user_list.html', title='User List', users=all_users)
 @app.route('/admin/employee_list')
-# @login_required
-# @role_required('admin-user')
+@login_required
+@role_required('admin-user')
 def employee_list():
     """This shows the list of employees."""
     all_employees = mongo.db.employees.find()
     return render_template('employee_list.html', title='Employee List', employees=all_employees)
 @app.route('/admin/add_ehr_fee', methods=['GET', 'POST'])
+@login_required
+@role_required('admin-user')
 def add_ehr_fee():
     departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
     if request.method == 'POST':
@@ -361,6 +455,8 @@ def add_ehr_fee():
         return redirect(url_for('manage_ehr_fees'))
     return render_template('add_ehr_fee.html', departments=departments)
 @app.route('/admin/mange_ehr_fees', methods=['GET', 'POST'])
+@login_required
+@role_required('admin-user')
 def manage_ehr_fees():
     """Display the EHR Fees table and handle adding new fees."""
     if request.method == 'POST':
@@ -384,6 +480,8 @@ def manage_ehr_fees():
 
 
 @app.route('/admin/delete_ehr_fee/<fee_id>')
+@login_required
+@role_required('admin-user')
 def delete_ehr_fee(fee_id):
     """Delete an EHR Fee"""
     mongo.db.ehr_fees.delete_one({'_id': ObjectId(fee_id)})
@@ -392,6 +490,8 @@ def delete_ehr_fee(fee_id):
 
 
 @app.route('/admin/edit_ehr_fee/<fee_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('admin-user')
 def edit_ehr_fee(fee_id):
     """Edit an existing EHR Fee"""
     try:
@@ -423,12 +523,16 @@ def edit_ehr_fee(fee_id):
     return render_template('edit_ehr_fees.html', title='Edit EHR Fee', fee=fee, departments=departments)
 
 @app.route('/admin/list_departments')
+@login_required
+@role_required('admin-user')
 def list_departments():
     """Display a list of departments"""
     departments = mongo.db.departments.find()
     return render_template('department_list.html', title='Department List', departments=departments)
 
 @app.route('/admin/add_department', methods=['GET', 'POST'])
+@login_required
+@role_required('admin-user')
 def add_department():
     """Add a new department"""
     if request.method == 'POST':
@@ -451,6 +555,8 @@ def add_department():
     return render_template('add_department.html', title='Add Department')
 
 @app.route('/admin/edit_department/<department_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('admin-user')
 def edit_department(department_id):
     """Edit an existing department"""
     try:
@@ -480,6 +586,8 @@ def edit_department(department_id):
     return render_template('edit_department.html', title='Edit Department', department=department)
 
 @app.route('/admin/delete_department/<department_id>')
+@login_required
+@role_required('admin-user')
 def delete_department(department_id):
     """Delete a department"""
     mongo.db.departments.delete_one({'_id': ObjectId(department_id)})
@@ -487,6 +595,8 @@ def delete_department(department_id):
     return redirect(url_for('list_departments'))
 
 @app.route('/clinical/ward_login', methods=['GET', 'POST'])
+@login_required
+@admin_or_role_required('clinical-services')
 def ward_login():
     departments = mongo.db.departments.find()
     if request.method == 'POST':

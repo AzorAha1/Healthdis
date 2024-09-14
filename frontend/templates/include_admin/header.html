@@ -130,7 +130,7 @@
          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
         
               <img src="../../statics/../../statics/dashboard/Upload/Adminprofile/<?php echo $row2['profile'];?>" class="user-image" alt="User Image">
-              <span class="hidden-xs">Aliyu Abubakar&nbsp;
+              <span class="hidden-xs">{{ email_name }}&nbsp;
           </span>
             </a>
             <ul class="dropdown-menu">
@@ -148,7 +148,7 @@
                   <a href="../../statics/../../statics/dashboard/Admin/index.php" class="btn btn-default btn-flat">Profile</a>
                 </div>
                 <div class="pull-right">
-                  <a href="../../statics/../../statics/index.php" class="btn btn-default btn-flat">Sign out</a>
+                  <a href="{{ url_for('logout') }}" class="btn btn-default btn-flat">log out</a>
                 </div>
               </li>
             </ul>

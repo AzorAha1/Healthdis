@@ -39,11 +39,11 @@
                         <form>
                             <div class="form-group">
                                 <label for="patient_number">Patient Number:</label>
-                                <input type="text" class="form-control" id="patient_number" value="{{ current_patient.ehr_number if patient else '' }}" readonly>
+                                <input type="text" class="form-control" id="patient_number" value="{{ current_patient.ehr_number }}" readonly>
                             </div>
                             <div class="form-group">
                                 <label for="patient_name">Patient Name:</label>
-                                <input type="text" class="form-control" id="patient_name" value="{{ curent_patient.patient_first_name if patient else '' }}" readonly>
+                                <input type="text" class="form-control" id="patient_name" value="{{ current_patient.patient_name }}" readonly>
                             </div>
                             <div class="form-group">
                                 <label for="department">Department:</label>
@@ -65,10 +65,25 @@
                             <label for="info_dropdown">Select Information:</label>
                             <select class="form-control" id="info_dropdown" name="info_dropdown">
                                 <!-- Add options here based on your requirements -->
-                                {% for department in departments %}
-                                    <option value="{{ department._id }}">{{ department.name }} - {{ department.type }}</option>
+                                <option value="">Select a service...</option>
+                                {% for service in services %}
+                                    <option value="{{ service['service_code'] }}">
+                                        {{ service['service_name'] }} ({{ service['service_fee'] }})
+                                    </option>
                                 {% endfor %}
                             </select>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <!-- Form to refresh the page -->
+                                    <form method="POST" action="{{ url_for('refresh_request') }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-success">Refresh Request</button>
+                                    </form>
+                                    <!-- Form to request a new ward -->
+                                    <form method="POST" action="{{ url_for('request_dashboard') }}" style="display: inline; margin-left: 10px;">
+                                        <button type="submit" class="btn btn-danger">Make Request</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

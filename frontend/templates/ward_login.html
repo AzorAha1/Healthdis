@@ -2,6 +2,7 @@
 {% include 'include_clinical/sidebar.html' %}
 
 <div class="content-wrapper">
+
     <section class="content-header">
         <h1>Ward Login</h1>
         <ol class="breadcrumb">
@@ -23,8 +24,8 @@
                                 <label for="ward">Select Ward</label>
                                 <select class="form-control" id="ward" name="ward" required>
                                     <option value="">Select a ward...</option>
-                                    {% for department in departments %}
-                                        <option value="{{ department._id }}">{{ department.name }}</option>
+                                    {% for ward in wards %}
+                                        <option value="{{ ward._id }}">{{ ward.department_name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -37,6 +38,7 @@
             </div>
         </div>
     </section>
+
 </div>
 
 {% include 'include_clinical/footer.html' %}

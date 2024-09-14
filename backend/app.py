@@ -215,8 +215,13 @@ def delete_employee(employee_id):
 def clinical_dashboard():
     print(session)
     # ward_name = session['ward']['name']
+    current_patient = session.get('current_patient', {})
+    ward_name = session.get('ward', {}).get('name', 'Not Assigned')
+    services_cursor = mongo.db.ehr_fees.find({'department_name': ward_name}) if ward_name != 'Not Assigned' else []
+    services_list = list(services_cursor)
+    print(services_list)
     email_name = session.get('email', 'Guest')
-    return render_template('clinical_dashboard.html', title='Clinical Dashboard', email_name=email_name)
+    return render_template('clinical_dashboard.html', title='Clinical Dashboard', email_name=email_name,current_patient=current_patient, ward_name=ward_name, services=services_list)
 
 @app.route('/clinical/patient_list')
 @login_required
@@ -295,6 +300,22 @@ def new_request():
            flash('Patient not found.', 'danger')
     return render_template('new_request.html')
 
+@app.route('/admin/refresh_request', methods=['POST'])
+@login_required
+@admin_or_role_required('clinical-services')
+def refresh_request():
+    # Clear the 'ward' session data
+    session.pop('ward', None)
+    session.pop('current_patient', None)
+    # Optionally, flash a message
+    flash('Ward session has been cleared. Please select a new ward.', 'info')
+    
+    # Redirect to the ward login page
+    return redirect(url_for('ward_login'))
+@app.route('/admin/request_dashboard', methods=['POST'])
+def request_dashboard():
+    """dashboard to make request"""
+    return render_template('request_dashboard.html', title='Request Dashboard')
 @app.route('/clinical/new_patient', methods=['GET', 'POST'])
 @login_required
 @admin_or_role_required('clinical-services')
@@ -314,28 +335,28 @@ def new_patient():
         address = request.form.get('address')
 
         # Fetch the last EHR number and increment it
-        last_patient = mongo.db.patients.find_one(sort=[("ehr_number", -1)])
+        # last_patient = mongo.db.patients.find_one(sort=[("ehr_number", -1)])
 
-        if last_patient:
-            last_ehr_number = int(last_patient['ehr_number'])
-        else:
-            # If no patients exist, start with EHR number 1
-            last_ehr_number = 0
+        # if last_patient:
+        #     last_ehr_number = int(last_patient['ehr_number'])
+        # else:
+        #     # If no patients exist, start with EHR number 1
+        #     last_ehr_number = 0
 
         # Increment the EHR number
-        new_ehr_number = last_ehr_number + 1
+        # new_ehr_number = last_ehr_number + 1
 
-        # Format the EHR number as a 6-digit number (e.g., 000001)
-        formatted_ehr_number = f'{new_ehr_number:06d}'
+        # # Format the EHR number as a 6-digit number (e.g., 000001)
+        # formatted_ehr_number = f'{new_ehr_number:06d}'
 
         # Generate a unique hospital number (UUID)
         hospital_number = str(uuid.uuid4())
 
         # Check if the patient already exists
-        existing_patient = mongo.db.patients.find_one({'ehr_number': formatted_ehr_number})
-
+        # existing_patient = mongo.db.patients.find_one({'ehr_number': formatted_ehr_number})
+        existing_patient = mongo.db.patients.find_one({'hospital_number': hospital_number})
         if existing_patient:
-            flash(f'Patient with EHR Number {formatted_ehr_number} already exists.', 'warning')
+            flash(f'Patient with Hospital Number {hospital_number} already exists.', 'warning')
         else:
             # Save patient data to MongoDB
             new_patient = {
@@ -347,14 +368,14 @@ def new_patient():
                 'phone_number': phone_number,
                 'next_of_kin_phone_number': next_of_kin_phone_number,
                 'address': address,
-                'ehr_number': formatted_ehr_number,
+                # 'ehr_number': formatted_ehr_number,
                 'created': str(formatted_time),  # Add timestamp
                 'registered_by': 'None',    # Dummy data for registered_by
                 'status': 'Active',         # New field for user status
                 'hospital_number': hospital_number  # New field for unique UUID
             }
             mongo.db.patients.insert_one(new_patient)
-            flash(f'Patient enrolled successfully with EHR Number: {formatted_ehr_number} and Hospital Number: {hospital_number}!', 'success')
+            flash(f'Patient enrolled successfully with Hospital Number: {hospital_number}!', 'success')
 
         return redirect(url_for('clinical_dashboard'))
 
@@ -598,7 +619,9 @@ def delete_department(department_id):
 @login_required
 @admin_or_role_required('clinical-services')
 def ward_login():
-    departments = mongo.db.departments.find()
+    # Fetch departments with department_typ 'ward'
+    wards = mongo.db.departments.find({'department_typ': 'ward'})
+    print(session)
     if request.method == 'POST':
         selected_ward_id = request.form.get('ward')
         if selected_ward_id:
@@ -606,15 +629,16 @@ def ward_login():
             if selected_ward:
                 session['ward'] = {
                     'id': str(selected_ward['_id']),
-                    'name': selected_ward['name']
+                    'name': selected_ward['department_name']
                 }
-                print(f'Selected Ward: {session["ward"]}')
                 return redirect(url_for('clinical_dashboard'))
-    return render_template('ward_login.html', title='Ward Login', departments=departments)
+    
+    return render_template('ward_login.html', title='Ward Login', wards=wards)
 @app.route('/logout')
 def logout():
     session.pop('email', None)
     session.pop('role', None)
+    session.pop('ward', None)
     return redirect(url_for('login'))
 
 if __name__ == '__main__':

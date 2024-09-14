@@ -17,7 +17,7 @@
                     <div class="box-header with-border">
                         <h3 class="box-title">Enter Patient Information</h3>
                     </div>
-                    <!-- /.box-header -->
+
                     <form method="POST" action="{{ url_for('new_patient') }}">
                         <div class="box-body">
                             <!-- Row 1: First name, Middle name, Surname -->
@@ -42,12 +42,28 @@
                                 </div>
                             </div>
 
-                            <!-- Row 2: Date of Birth, Gender -->
+                            <!-- Row 2: State of Origin, Religion -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="patient_state">State of Origin</label>
+                                        <input type="text" class="form-control" name="patient_state" placeholder="Enter state of origin" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="patient_religion">Religion</label>
+                                        <input type="text" class="form-control" name="patient_religion" placeholder="Enter religion" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Date of Birth, Gender -->
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="dob">Date of Birth</label>
-                                        <input type="date" class="form-control" name="age" required>
+                                        <input type="date" class="form-control" name="dob" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -61,26 +77,26 @@
                                 </div>
                             </div>
 
-                            <!-- Row 3: Phone numbers, Address -->
+                            <!-- Row 4: Phone numbers -->
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="patient-pno">Phone Number</label>
-                                        <input type="text" class="form-control" name="patient-pno" placeholder="Enter phone number">
+                                        <label for="patient_pno">Phone Number</label>
+                                        <input type="text" class="form-control" name="patient_pno" placeholder="Enter phone number" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="patient-nextofkinpno">Next of Kin Phone Number</label>
-                                        <input type="text" class="form-control" name="patient-nextofkinpno" placeholder="Enter next of kin's phone number">
+                                        <label for="patient_nextofkinpno">Next of Kin Phone Number</label>
+                                        <input type="text" class="form-control" name="patient_nextofkinpno" placeholder="Enter next of kin's phone number" required>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Row 4: Address -->
+                            <!-- Row 5: Address -->
                             <div class="form-group">
                                 <label for="address">Address</label>
-                                <textarea class="form-control" name="address" rows="3" placeholder="Enter patient's address"></textarea>
+                                <textarea class="form-control" name="address" rows="3" placeholder="Enter patient's address" required></textarea>
                             </div>
                         </div>
 
@@ -90,13 +106,38 @@
                         </div>
                     </form>
                 </div>
-                <!-- /.box -->
             </div>
-            <!-- /.col -->
         </div>
-        <!-- /.row -->
     </section>
-    <!-- /.content -->
 </div>
 
-{% include 'include_clinical/footer.html' %} this will be just the update_patient just at the values 
+{% include 'include_clinical/footer.html' %}
+
+<style>
+    .form-group label {
+        font-weight: 600;
+        color: #555;
+    }
+    .form-control {
+        border-radius: 4px;
+        padding: 10px;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        font-size: 18px;
+        padding: 10px;
+        transition: background-color 0.3s ease;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #004085;
+    }
+    .box-title {
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .breadcrumb {
+        background-color: transparent;
+    }
+</style>

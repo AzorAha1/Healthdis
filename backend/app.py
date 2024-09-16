@@ -169,8 +169,8 @@ def admin_dashboard():
 
 
 @app.route('/admin/edit_user/<user_id>', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def edit_user(user_id):
     # Fetch user data from MongoDB
     user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
@@ -211,8 +211,8 @@ def edit_user(user_id):
     return render_template('edit_user.html', user=user)
 
 @app.route('/admin/edit_employee/<employee_id>', methods=['GET', 'POST'])
-@role_required('admin-user')
-@login_required
+# @role_required('admin-user')
+# @login_required
 def edit_employee(employee_id):
     """Route to edit a user."""
     # Logic to edit the user with the given user_id
@@ -224,15 +224,15 @@ def edit_employee(employee_id):
 
 
 @app.route('/admin/delete_user/<user_id>', methods=['POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def delete_user(user_id):
     mongo.db.users.delete_one({'_id': ObjectId(user_id)})
     flash('User deleted successfully!', 'danger')
     return redirect(url_for('user_list'))
 @app.route('/admin/delete_employee/<employee_id>', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def delete_employee(employee_id):
     """Route to edit a user."""
     # Logic to edit the user with the given user_id
@@ -491,8 +491,8 @@ def follow_up():
     return render_template('follow_up.html', title='Follow-Up Visit')
 # Add user route
 @app.route('/admin/add_user', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def add_user():
     if request.method == 'POST':
         firstname = request.form.get('firstname')
@@ -509,10 +509,10 @@ def add_user():
         phonenumber = request.form.get('phonenumber')
 
         # Check if user already exists
-        existing_user = mongo.db.users.find_one({'email': email})
-        if existing_user:
-            flash('User with this email already exists.', 'danger')
-            return redirect(url_for('add_user'))
+        # existing_user = mongo.db.users.find_one({'email': email})
+        # if existing_user:
+        #     flash('User with this email already exists.', 'danger')
+        #     return redirect(url_for('add_user'))
 
         # Check if EHR number already exists
         # existing_ehr = mongo.db.users.find_one({'ehr_number': ehr_number})
@@ -536,19 +536,21 @@ def add_user():
             'role': role,
             'department': department,
         }
-        mongo.db.users.insert_one(new_user)
+        # mongo.db.users.insert_one(new_user)
 
         # flash(f'User added successfully with EHR Number: {ehr_number}!', 'success')
         return redirect(url_for('admin_dashboard'))
 
     return render_template('add_user.html', title='Add User')
 @app.route('/admin/user_list')
-@login_required 
-@role_required('admin-user')
+# @login_required 
+# @role_required('admin-user')
 def user_list():
     """this shows the list of users created"""
-    all_users = mongo.db.users.find()
-    return render_template('user_list.html', title='User List', users=all_users)
+    # all_users = mongo.db.users.find()
+    return render_template('user_list.html', title='User List'
+    # , users=all_users
+    )
 @app.route('/admin/employee_list')
 @login_required
 @role_required('admin-user')
@@ -578,8 +580,8 @@ def add_ehr_fee():
         return redirect(url_for('manage_ehr_fees'))
     return render_template('add_ehr_fee.html', departments=departments)
 @app.route('/admin/mange_ehr_fees', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def manage_ehr_fees():
     """Display the EHR Fees table and handle adding new fees."""
     if request.method == 'POST':
@@ -598,8 +600,11 @@ def manage_ehr_fees():
         return redirect(url_for('ehr_fees'))
 
     # Retrieve all EHR fees
-    fees = mongo.db.ehr_fees.find()
-    return render_template('ehr_fees.html', title='EHR Fees', fees=fees)
+    # fees = mongo.db.ehr_fees.find()
+    return render_template('ehr_fees.html', title='EHR Fees'
+    ,
+    #  fees=fees
+     )
 
 
 @app.route('/admin/delete_ehr_fee/<fee_id>')

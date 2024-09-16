@@ -9,113 +9,119 @@
 </head>
 <body>
     <div class="container">
-        <div class="image-container"></div>
-        <div class="login-container">
-            <div class="login-form">
-                <h2><b>FMC Tarau</b></h2>
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        <div class="flash-messages">
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }}">{{ message }}</div>
-                            {% endfor %}
+        <div class="left-container">
+            <div class="login-container">
+                <div class="login-form">
+                    <h2><b>FMC Taura Login</b></h2>
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="flash-messages">
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div class="login-tabs">
+                        <label for="">
+                            <input name="select" type="radio" id="clinical-tab" checked class="active" onclick="showForm('clinical')">clinical
+                        </label>
+                        <label for="">
+                            <input name="select" type="radio" id="medpay-tab" class="active" onclick="showForm('medpay')">medpay
+                        </label>
+                        <label for="">
+                             <input name="select" type="radio" id="admin-tab" class="active" onclick="showForm('admin')">Admin
+                         </label> 
+                    </div>
+
+                    <!-- Admin Login Form -->
+                    <form id="adminLoginForm" class="login-form-content hidden" method="POST">
+                        <input type="hidden" name="role" value="admin-user">
+                        <div class="form-group">
+                            <label for="adminEmail">Admin Email</label>
+                            <div class="input-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="email" id="adminEmail" name="email" autocomplete="off" required>
+                            </div>
                         </div>
-                    {% endif %}
-                {% endwith %}
-                <!-- Tabs to select login type -->
-                <div class="login-tabs">
-                    <button id="admin-tab" class="active" onclick="showForm('admin')">Admin</button>
-                    <button id="medpay-tab" onclick="showForm('medpay')">MedPay</button>
-                    <button id="clinical-tab" onclick="showForm('clinical')">Clinical Services</button>
+                        <div class="form-group">
+                            <label for="adminPassword">Password</label>
+                            <div class="input-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="adminPassword" name="password" required>
+                            </div>
+                        </div>
+                        <button type="submit">SIGN IN <i class="fa fa-arrow-right"></i></button>
+                    </form>
+
+                    <!-- MedPay Login Form -->
+                    <form id="medpayLoginForm" class="login-form-content hidden" method="POST">
+                        <input type="hidden" name="role" value="medpay-user">
+                        <div class="form-group">
+                            <label for="medpayEmail">MedPay Email</label>
+                            <div class="input-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="email" id="medpayEmail" name="email" autocomplete="off" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="medpayPassword">Password</label>
+                            <div class="input-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="medpayPassword" name="password" required>
+                            </div>
+                        </div>
+                        <button type="submit">SIGN IN <i class="fa fa-arrow-right"></i></button>
+                    </form>
+
+                    <!-- Clinical Services Login Form -->
+                    <form id="clinicalLoginForm" class="login-form-content " method="POST">
+                        <input type="hidden" name="role" value="clinical-services">
+                        <div class="form-group">
+                            <label for="clinicalEmail">Clinical Services Email</label>
+                            <div class="input-icon">
+                                <i class="fas fa-user"></i>
+                                <input type="email" id="clinicalEmail" name="email" autocomplete="off" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="clinicalPassword">Password</label>
+                            <div class="input-icon">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="clinicalPassword" name="password" required>
+                            </div>
+                        </div>
+                        <button type="submit">SIGN IN <i class="fa fa-arrow-right"></i></button>
+                    </form>
                 </div>
-
-                <!-- Admin Login Form -->
-                <form id="adminLoginForm" class="login-form-content" method="POST">
-                    <input type="hidden" name="role" value="admin-user">
-                    <div class="form-group">
-                        <label for="adminEmail">Admin Email</label>
-                        <div class="input-icon">
-                            <i class="fas fa-user"></i>
-                            <input type="email" id="adminEmail" name="email" autocomplete="off" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="adminPassword">Password</label>
-                        <div class="input-icon">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="adminPassword" name="password" required>
-                        </div>
-                    </div>
-                    <button type="submit">SIGN IN <i class="fa fa-arrow-right"></i></button>
-                </form>
-
-                <!-- MedPay Login Form -->
-                <form id="medpayLoginForm" class="login-form-content hidden" method="POST">
-                    <input type="hidden" name="role" value="medpay-user">
-                    <div class="form-group">
-                        <label for="medpayEmail">MedPay Email</label>
-                        <div class="input-icon">
-                            <i class="fas fa-user"></i>
-                            <input type="email" id="medpayEmail" name="email" autocomplete="off" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="medpayPassword">Password</label>
-                        <div class="input-icon">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="medpayPassword" name="password" required>
-                        </div>
-                    </div>
-                    <button type="submit">SIGN IN <i class="fa fa-arrow-right"></i></button>
-                </form>
-
-                <!-- Clinical Services Login Form -->
-                <form id="clinicalLoginForm" class="login-form-content hidden" method="POST">
-                    <input type="hidden" name="role" value="clinical-services">
-                    <div class="form-group">
-                        <label for="clinicalEmail">Clinical Services Email</label>
-                        <div class="input-icon">
-                            <i class="fas fa-user"></i>
-                            <input type="email" id="clinicalEmail" name="email" autocomplete="off" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="clinicalPassword">Password</label>
-                        <div class="input-icon">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="clinicalPassword" name="password" required>
-                        </div>
-                    </div>
-                    <button type="submit">SIGN IN <i class="fa fa-arrow-right"></i></button>
-                </form>
             </div>
         </div>
-    </div>
-    <div id="preloader">
-        <div class="spinner"></div>
+
+        <div class="image-container"></div>
     </div>
     <script src="../statics/js/script.js"></script>
     <script>
-       function showForm(role) {
-        document.getElementById('adminLoginForm').classList.add('hidden');
-        document.getElementById('medpayLoginForm').classList.add('hidden');
-        document.getElementById('clinicalLoginForm').classList.add('hidden');
+        function showForm(role) {
+            document.getElementById('adminLoginForm').classList.add('hidden');
+            document.getElementById('medpayLoginForm').classList.add('hidden');
+            document.getElementById('clinicalLoginForm').classList.add('hidden');
 
-        document.getElementById('admin-tab').classList.remove('active');
-        document.getElementById('medpay-tab').classList.remove('active');
-        document.getElementById('clinical-tab').classList.remove('active');
+            document.getElementById('admin-tab').classList.remove('active');
+            document.getElementById('medpay-tab').classList.remove('active');
+            document.getElementById('clinical-tab').classList.remove('active');
 
-        if (role === 'admin') {
-            document.getElementById('adminLoginForm').classList.remove('hidden');
-            document.getElementById('admin-tab').classList.add('active');
-        } else if (role === 'medpay') {
-            document.getElementById('medpayLoginForm').classList.remove('hidden');
-            document.getElementById('medpay-tab').classList.add('active');
-        } else if (role === 'clinical') {
-            document.getElementById('clinicalLoginForm').classList.remove('hidden');
-            document.getElementById('clinical-tab').classList.add('active');
+            if (role === 'admin') {
+                document.getElementById('adminLoginForm').classList.remove('hidden');
+                document.getElementById('admin-tab').classList.add('active');
+            } else if (role === 'medpay') {
+                document.getElementById('medpayLoginForm').classList.remove('hidden');
+                document.getElementById('medpay-tab').classList.add('active');
+            } else if (role === 'clinical') {
+                document.getElementById('clinicalLoginForm').classList.remove('hidden');
+                document.getElementById('clinical-tab').classList.add('active');
+            }
         }
-    }
-    </script>   
+    </script>
 </body>
 </html>

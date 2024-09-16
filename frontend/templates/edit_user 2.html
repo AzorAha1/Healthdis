@@ -1,0 +1,73 @@
+{% include 'include_admin/header.html' %}
+{% include 'include_admin/sidebar.html' %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>Edit User</h1>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Update User Information</h3>
+                    </div>
+                    <form method="POST" action="{{ url_for('edit_user', user_id=user._id) }}">
+                        <!-- Existing user fields here -->
+                        <div class="form-group">
+                            <label for="firstname">First Name:</label>
+                            <input type="text" class="form-control" id="firstname" name="firstname" value="{{ user.firstname }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="middlename">Middle Name:</label>
+                            <input type="text" class="form-control" id="middlename" name="middlename" value="{{ user.middlename }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="lastname">Last Name:</label>
+                            <input type="text" class="form-control" id="lastname" name="lastname" value="{{ user.lastname }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phonenumber">Phone Number:</label>
+                            <input type="text" class="form-control" id="phonenumber" name="phonenumber" value="{{ user.phonenumber }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ippisno">IPPIS NO:</label>
+                            <input type="text" class="form-control" id="ippisno" name="ippisno" value="{{ user.ippisno }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="department">Department:</label>
+                            <input type="text" class="form-control" id="department" name="department" value="{{ user.department }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="rank">Rank:</label>
+                            <input type="text" class="form-control" id="rank" name="rank" value="{{ user.rank }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="username">Username:</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                        </div>
+
+                        <!--upgrading user role-->
+                        <div class="form-group">
+                            <label for="role">Upgrade User Privilege:</label>
+                            <select class="form-control" id="role" name="role">
+                                <option value="user" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                                <option value="admin" {% if user.role == 'medpay' %}selected{% endif %}>Medpay</option>
+                                <option value="super_admin" {% if user.role == 'clinical' %}selected{% endif %}>Clinical</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Update User</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+{% include 'include_admin/footer.html' %}

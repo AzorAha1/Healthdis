@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Details</title>
+    <!-- Add your CSS links here -->
+</head>
+<body>
+    <h1>Request Details</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="request-details">
+        <p><strong>Service Name:</strong> {{ request_details.service_name }}</p>
+        <p><strong>Service Code:</strong> {{ request_details.service_code }}</p>
+        <p><strong>Service Fee:</strong> {{ request_details.service_fee }}</p>
+        <p><strong>Department Name:</strong> {{ request_details.department_name }}</p>
+    </div>
+
+    <a href="{{ url_for('clinical_dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+
+    <!-- Add your JavaScript links here -->
+</body>
+</html>

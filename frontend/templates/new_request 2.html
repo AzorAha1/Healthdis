@@ -1,0 +1,55 @@
+{% include 'include_clinical/header.html' %}
+{% include 'include_clinical/sidebar.html' %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            Search Patient For New Request
+        </h1>
+        <ol class="breadcrumb">
+            <li><a href="{{ url_for('clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li class="active">Search Patient</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Find Patient by EHR Number</h3>
+                    </div>
+                    <!-- /.box-header -->
+
+                    <!-- Flash messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="alert alert-{{ messages[0][0] }}">
+                                {{ messages[0][1] }}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('new_request') }}">
+                        <div class="box-body">
+                            <div class="form-group">
+                                <label for="ehr_number">EHR Number</label>
+                                <input type="text" class="form-control" name="ehr_number" placeholder="Enter EHR number" required>
+                            </div>
+                        </div>
+                        <!-- /.box-body -->
+                        <div class="box-footer">
+                            <button type="submit" class="btn btn-primary btn-block">Search</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.box -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+    <!-- /.content -->
+</div>
+
+{% include 'include_clinical/footer.html' %}

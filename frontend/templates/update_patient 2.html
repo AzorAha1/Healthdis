@@ -1,0 +1,109 @@
+{% include 'include_clinical/header.html' %}
+{% include 'include_clinical/sidebar.html' %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>Update Patient Record</h1>
+        <ol class="breadcrumb">
+            <li><a href="{{ url_for('clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="{{ url_for('patient_list') }}">Patient List</a></li>
+            <li class="active">Update Patient Record</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Edit Patient Information</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <form method="POST" action="{{ url_for('update_patient', hospital_number=patient['hospital_number']) }}">
+                        <div class="box-body">
+                            <!-- Row 1: First name, Middle name, Surname -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="patient_first_name">First Name</label>
+                                        <input type="text" class="form-control" id="patient_first_name" name="patient_first_name" value="{{ patient['patient_first_name'] }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="patient_middle_name">Middle Name</label>
+                                        <input type="text" class="form-control" id="patient_middle_name" name="patient_middle_name" value="{{ patient['patient_middle_name'] }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="patient_surname_name">Surname</label>
+                                        <input type="text" class="form-control" id="patient_surname_name" name="patient_surname_name" value="{{ patient['patient_surname_name'] }}" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Date of Birth, Gender -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="dob">Date of Birth</label>
+                                        <input type="date" class="form-control" id="dob" name="dob" value="{{ patient['dob'] }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="gender">Gender</label>
+                                        <select class="form-control" id="gender" name="gender" required>
+                                            <option value="male" {% if patient['gender'] == 'male' %}selected{% endif %}>Male</option>
+                                            <option value="female" {% if patient['gender'] == 'female' %}selected{% endif %}>Female</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Phone numbers, Address -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="phone_number">Phone Number</label>
+                                        <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ patient['phone_number'] }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="next_of_kin_phone_number">Next of Kin Phone Number</label>
+                                        <input type="text" class="form-control" id="next_of_kin_phone_number" name="next_of_kin_phone_number" value="{{ patient['next_of_kin_phone_number'] }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 4: Address -->
+                            <div class="form-group">
+                                <label for="address">Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="3">{{ patient['address'] }}</textarea>
+                            </div>
+
+                            <!-- Row 5: Status -->
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <input type="text" class="form-control" id="status" name="status" value="{{ patient['status'] }}">
+                            </div>
+                        </div>
+
+                        <!-- /.box-body -->
+                        <div class="box-footer">
+                            <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.box -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+    <!-- /.content -->
+</div>
+
+{% include 'include_clinical/footer.html' %}

@@ -1,0 +1,91 @@
+{% include 'include_admin/header.html' %}
+{% include 'include_admin/sidebar.html' %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>New User Enrollment</h1>
+        <ol class="breadcrumb">
+            <li><a href="{{ url_for('admin_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li class="active">New User Enrollment</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Enter User Information</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <form method="POST" action="{{ url_for('add_user') }}">
+                        <div class="form-group">
+                            <label for="firstname">First Name:</label>
+                            <input type="text" class="form-control" id="firstname" name="firstname" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="middlename">Middle Name:</label>
+                            <input type="text" class="form-control" id="middlename" name="middlename">
+                        </div>
+                        <div class="form-group">
+                            <label for="lastname">Last Name:</label>
+                            <input type="text" class="form-control" id="lastname" name="lastname" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ippisno">IPPIS NO</label>
+                            <input type="text" class="form-control" id="ippisno" name="ippisno">
+                        </div>
+                        <div class="form-group">
+                            <label for="staff_id">Staff ID:</label>
+                            <input type="text" class="form-control" id="staff_id" name="staff_id" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="rank">Rank:</label>
+                            <input type="text" class="form-control" id="rank" name="rank" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="username">Username:</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password:</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="role">Role:</label>
+                            <select class="form-control" id="role" name="role" required>
+                                <option value="">---Select---</option>
+                                <option value="admin-user">Admin User</option>
+                                <option value="medpay-user">MedPay User</option>
+                                <option value="clinical-services">Clinical Services</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="department">Department:</label>
+                            <input type="text" class="form-control" id="department" name="department" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phonenumber">Phone Number:</label>
+                            <input type="text" class="form-control" id="phonenumber" name="phonenumber" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ehr_number">EHR Number:</label>
+                            <input type="text" class="form-control" id="ehr_number" name="ehr_number" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add User</button>
+                    </form>
+                </div>
+                <!-- /.box -->
+            </div>
+            <!-- /.col -->
+        </div>
+        <!-- /.row -->
+    </section>
+    <!-- /.content -->
+</div>
+
+{% include 'include_admin/footer.html' %}

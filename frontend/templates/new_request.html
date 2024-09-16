@@ -30,7 +30,7 @@
                         {% endif %}
                     {% endwith %}
 
-                    <form method="POST">
+                    <form method="POST" action="{{ url_for('new_request') }}">
                         <div class="box-body">
                             <div class="form-group">
                                 <label for="ehr_number">EHR Number</label>

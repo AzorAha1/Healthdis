@@ -58,20 +58,27 @@
             <div class="col-md-6">
                 <div class="box box-primary">
                     <div class="box-header with-border">
-                        <h3 class="box-title">Additional Information</h3>
+                        <h3 class="box-title">Select Request</h3>
                     </div>
                     <div class="box-body">
-                        <div class="form-group">
-                            <label for="info_dropdown">Select Information:</label>
-                            <select class="form-control" id="info_dropdown" name="info_dropdown">
-                                <!-- Add options here based on your requirements -->
-                                <option value="">Select a service...</option>
-                                {% for service in services %}
-                                    <option value="{{ service['service_code'] }}">
+                        <form method="POST" action="{{ url_for('in_patient_request') }}">
+                            <div class="form-group">
+                                <label for="info_dropdown">Select Request:</label>
+                                <select class="form-control" id="info_dropdown" name="selected_service">
+                                    <option value="">Select a service...</option>
+                                    {% for service in services %}
+                                    <option value="{{ service|tojson|forceescape }}">
                                         {{ service['service_name'] }} ({{ service['service_fee'] }})
                                     </option>
-                                {% endfor %}
-                            </select>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="submit" class="btn btn-danger">Make Request</button>
+                                </div>
+                            </div>
+                        </form>
                             <div class="row">
                                 <div class="col-md-12">
                                     <!-- Form to refresh the page -->
@@ -79,7 +86,8 @@
                                         <button type="submit" class="btn btn-success">Refresh Request</button>
                                     </form>
                                     <!-- Form to request a new ward -->
-                                    <form method="POST" action="{{ url_for('request_dashboard') }}" style="display: inline; margin-left: 10px;">
+                                    <form method="POST" action="{{ url_for('in_patient_request') }}" style="display: inline; margin-left: 10px;">
+                                        <input type="hidden" id="selected_service" name="selected_service" value="">
                                         <button type="submit" class="btn btn-danger">Make Request</button>
                                     </form>
                                 </div>

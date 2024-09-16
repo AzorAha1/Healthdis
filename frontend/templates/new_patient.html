@@ -12,7 +12,7 @@
 
     <section class="content">
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-12">
                 <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title">Enter Patient Information</h3>
@@ -20,89 +20,163 @@
 
                     <form method="POST" action="{{ url_for('new_patient') }}">
                         <div class="box-body">
-                            <!-- Row 1: First name, Middle name, Surname -->
+                            <div class="form-group"></div>
+                                <label for="enrollment_code">Enrollment Code</label>
+                                <input type="text" class="form-control" name="enrollment_code" value="{{ enrollment_code }}" readonly>
+                            </div>
+                            <!-- Patient Type -->
+                            <div class="form-group">
+                                <label for="patient_type">Patient Type</label>
+                                <select class="form-control" name="patient_type" required>
+                                    <option value="">Select Patient Type</option>
+                                    <option value="NHIS">NHIS Patient</option>
+                                    <option value="REGULAR">Regular Patient</option>
+                                </select>
+                            </div>
+
+                            <!-- Name Fields -->
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="patient_first_name">First Name</label>
-                                        <input type="text" class="form-control" name="patient_first_name" placeholder="Enter first name" required>
+                                        <input type="text" class="form-control" name="patient_first_name" required>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="patient_middle_name">Middle Name</label>
-                                        <input type="text" class="form-control" name="patient_middle_name" placeholder="Enter middle name">
+                                        <input type="text" class="form-control" name="patient_middle_name">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="patient_surname_name">Surname</label>
-                                        <input type="text" class="form-control" name="patient_surname_name" placeholder="Enter surname" required>
+                                        <input type="text" class="form-control" name="patient_surname_name" required>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Row 2: State of Origin, Religion -->
+                            <!-- Personal Information -->
                             <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="patient_state">State of Origin</label>
-                                        <input type="text" class="form-control" name="patient_state" placeholder="Enter state of origin" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="patient_religion">Religion</label>
-                                        <input type="text" class="form-control" name="patient_religion" placeholder="Enter religion" required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Row 3: Date of Birth, Gender -->
-                            <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="dob">Date of Birth</label>
                                         <input type="date" class="form-control" name="dob" required>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="gender">Gender</label>
                                         <select class="form-control" name="gender" required>
+                                            <option value="">Select Gender</option>
                                             <option value="male">Male</option>
                                             <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="tribe">Tribe</label>
+                                        <input type="text" class="form-control" name="tribe">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="marital_status">Marital Status</label>
+                                        <select class="form-control" name="marital_status">
+                                            <option value="">Select Marital Status</option>
+                                            <option value="single">Single</option>
+                                            <option value="married">Married</option>
+                                            <option value="divorced">Divorced</option>
+                                            <option value="widowed">Widowed</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Row 4: Phone numbers -->
+                            <!-- Contact Information -->
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="patient_pno">Phone Number</label>
-                                        <input type="text" class="form-control" name="patient_pno" placeholder="Enter phone number" required>
+                                        <label for="phone_number">Phone Number</label>
+                                        <input type="tel" class="form-control" name="phone_number" required>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="patient_nextofkinpno">Next of Kin Phone Number</label>
-                                        <input type="text" class="form-control" name="patient_nextofkinpno" placeholder="Enter next of kin's phone number" required>
+                                        <label for="occupation">Occupation</label>
+                                        <input type="text" class="form-control" name="occupation">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="address">Address</label>
+                                        <input type="text" class="form-control" name="address" required>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Row 5: Address -->
-                            <div class="form-group">
-                                <label for="address">Address</label>
-                                <textarea class="form-control" name="address" rows="3" placeholder="Enter patient's address" required></textarea>
+                            <!-- Origin and Location -->
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="place_of_origin">Place of Origin</label>
+                                        <input type="text" class="form-control" name="place_of_origin">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="city">City</label>
+                                        <input type="text" class="form-control" name="city">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="state">State</label>
+                                        <input type="text" class="form-control" name="state">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="country">Country</label>
+                                        <input type="text" class="form-control" name="country" value="Nigeria">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Next of Kin Information -->
+                            <h4>Next of Kin Information</h4>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="next_of_kin">Next of Kin Name</label>
+                                        <input type="text" class="form-control" name="next_of_kin" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="next_of_kin_relation">Relation to Next of Kin</label>
+                                        <input type="text" class="form-control" name="next_of_kin_relation" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="next_of_kin_phone_number">Next of Kin Phone Number</label>
+                                        <input type="tel" class="form-control" name="next_of_kin_phone_number" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="next_of_kin_address">Next of Kin Address</label>
+                                        <input type="text" class="form-control" name="next_of_kin_address" required>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- /.box-body -->
                         <div class="box-footer">
-                            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                            <button type="submit" class="btn btn-primary btn-block">Enroll Patient</button>
                         </div>
                     </form>
                 </div>
@@ -112,32 +186,3 @@
 </div>
 
 {% include 'include_clinical/footer.html' %}
-
-<style>
-    .form-group label {
-        font-weight: 600;
-        color: #555;
-    }
-    .form-control {
-        border-radius: 4px;
-        padding: 10px;
-    }
-    .btn-primary {
-        background-color: #007bff;
-        border-color: #007bff;
-        font-size: 18px;
-        padding: 10px;
-        transition: background-color 0.3s ease;
-    }
-    .btn-primary:hover {
-        background-color: #0056b3;
-        border-color: #004085;
-    }
-    .box-title {
-        font-size: 20px;
-        font-weight: bold;
-    }
-    .breadcrumb {
-        background-color: transparent;
-    }
-</style>

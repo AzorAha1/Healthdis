@@ -1,21 +1,41 @@
-/* Updated styles in style.css */
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: #f5f7fa; /* Light background */
+    background-color: #f5f7fa;
     margin: 0;
     padding: 0;
+    height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100vh;
 }
 
 .container {
-    background-color: #ffffff;
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    width: 400px;
+    overflow: hidden;
+}
+
+.left-container {
+    width: 50%;
     padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    animation: slide .90s ease-in-out;
+    transition: .5s;
+}
+
+.image-container {
+    width: 50%;
+    background-image: url('../img/taura.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    animation: slide2 .90s ease-in-out;
 }
 
 h2 {
@@ -31,19 +51,16 @@ h2 {
     margin-bottom: 20px;
 }
 
-.login-tabs button {
-    background-color: #1b2a49;
-    color: #ffffff;
-    padding: 10px;
+.login-tabs label {  
+    padding: 0px;
     border: none;
     cursor: pointer;
     border-radius: 5px;
     transition: background-color 0.3s;
 }
-
-.login-tabs button.active {
-    background-color: #4caf50;
-}
+.login-tabs label input{
+    width: 50px;
+} 
 
 .login-form-content {
     display: flex;
@@ -67,6 +84,7 @@ h2 {
     border: 1px solid #dddddd;
     border-radius: 5px;
     font-size: 16px;
+    width: 85%;
 }
 
 button[type="submit"] {
@@ -77,6 +95,8 @@ button[type="submit"] {
     cursor: pointer;
     border-radius: 5px;
     transition: background-color 0.3s;
+    width: 100%;
+    align-items: center;
 }
 
 button[type="submit"]:hover {
@@ -88,56 +108,40 @@ input:focus {
     border-color: #4caf50;
 }
 
-small {
-    color: #ff0000;
-}
 .hidden {
     display: none;
 }
 
-.active {
-    background-color: #007bff; /* Example: Blue background for active tab */
-    color: white;
-}
-
-.login-tabs button {
-    margin: 0 5px;
-    padding: 10px;
-    border: none;
-    cursor: pointer;
-}
-
-.login-tabs button.active {
-    background-color: #007bff; /* Active button style */
-    color: white;
-}
 .flash-messages {
     width: 100%;
     margin-bottom: 20px;
 }
-
-/* Add this to your CSS file */
-.alert-container {
-    transition: opacity 0.5s ease-out;
+@keyframes slide {
+    0%{
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    100%{
+        opacity: 1;
+        transform: translateZ(0);
+    }
 }
 
-.alert {
-    margin-bottom: 15px;
+@keyframes slide2 {
+    0%{
+        opacity: 0;
+        transform: translateZ(0);
+    }
+    100%{
+        opacity: 1;
+        transform: translateX(-25px);
+    }
 }
-
-.alert-success {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.alert-error {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-.popup {
-    width: 50px;
-    height: 100px;
-    border-radius: 50%;
-    background-color: hsla(211, 97%, 48%, 0.585);
+@media (max-width: 768px) {
+    .image-container { 
+        display: none;       
+    }
+    .left-container{
+        width: 100%;
+    }
 }

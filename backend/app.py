@@ -153,8 +153,8 @@ def add_employee():
 # Admin dashboard
 @app.route('/admin/')
 @app.route('/admin/dashboard')
-@login_required
-@role_required('admin-user')
+# # @login_required
+# @role_required('admin-user')
 def admin_dashboard():
     print(session)
     email_name = session.get('email', 'Guest')

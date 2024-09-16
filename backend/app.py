@@ -800,29 +800,54 @@ def ward_login():
 def in_patient_request():
     """This makes request for in-patient"""
     if request.method == 'POST':
+        # Get the selected service data from the form
         selected_service = request.form.get('selected_service')
         print("Raw selected_service:", selected_service)
         
         if selected_service:
             try:
+                # Parse the selected service (assumes it's in JSON format)
                 service = json.loads(selected_service)
                 print("Parsed service:", service)
+                
+                current_patient = session.get('current_patient', {})
+                # Create the request information to store in the session
                 current_request = {
                     'service_name': service['service_name'],
                     'service_code': service['service_code'],
                     'service_fee': service['service_fee'],
                     'department_name': service['department_name']
                 }
+                requests = {
+                    'patient_Number': f"{current_patient.get('patient_name', 'Unknown')} - {current_patient.get('ehr_number', 'Unknown')}",
+                    'Department': service['department_name'],
+                    'Service_Code': service['service_code'],
+                    'Service_Name': service['service_name'],
+                    'Cost': service['service_fee'],
+                    'Status': 'Pending',
+                    'ehr_number': current_patient.get('ehr_number', 'Unknown'),
+                    'Invoice Date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    'Requested_by': session.get('email', 'Unknown'),
+                    'Ward': session.get('ward', {}).get('name', 'Not Assigned')
+                }
+                mongo.db.requests.insert_one(requests)
+                # Save the request information in the session
                 session['current_request'] = current_request
+                
+                # Flash a success message
                 flash('Request created successfully', 'success')
+                
+                # Render a page that shows the request details
                 return render_template('request_details.html', request_details=current_request)
+            
+            # Handle potential JSON decoding errors
             except json.JSONDecodeError as e:
-                print(f"JSON decode error: {e}")  # Debug print
+                print(f"JSON decode error: {e}")  # Debug print for error tracking
                 flash('Error processing service information', 'error')
         else:
             flash('No service selected', 'error')
     
-    # If it's a GET request or if there's an error, redirect to the dashboard
+    # Redirect to the dashboard if no POST request or in case of errors
     return redirect(url_for('clinical_dashboard'))
 @app.route('/logout')
 def logout():

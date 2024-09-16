@@ -6,13 +6,14 @@ from flask import Flask, flash, render_template, request, redirect, url_for, ses
 from flask_pymongo import PyMongo
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/statics')
 
 # MongoDB Configuration
 app.config['MONGO_URI'] = "mongodb://localhost:27017/healthdis"
 app.config['SECRET_KEY'] = 'dc21a9cb05847ffd9d5a37b67857042b'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
 mongo = PyMongo(app)
 
 # Helper function for requiring login

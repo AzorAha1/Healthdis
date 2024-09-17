@@ -472,7 +472,7 @@ def medpay_dashboard():
 def pos_terminal():
     if request.method == 'POST':
         search_term = request.form.get('ehr_number')  # This can be EHR number or enrollment code
-        if search_term:
+        if search_term: 
             # Search for requests matching the search term
             requests = mongo.db.requests.find({
                 '$or': [
@@ -547,10 +547,8 @@ def add_user():
 # @role_required('admin-user')
 def user_list():
     """this shows the list of users created"""
-    # all_users = mongo.db.users.find()
-    return render_template('user_list.html', title='User List'
-    # , users=all_users
-    )
+    all_users = mongo.db.users.find()
+    return render_template('user_list.html', title='User List', users=all_users)
 @app.route('/admin/employee_list')
 @login_required
 @role_required('admin-user')
@@ -600,10 +598,8 @@ def manage_ehr_fees():
         return redirect(url_for('ehr_fees'))
 
     # Retrieve all EHR fees
-    # fees = mongo.db.ehr_fees.find()
-    return render_template('ehr_fees.html', title='EHR Fees'
-    ,
-    #  fees=fees
+    fees = mongo.db.ehr_fees.find()
+    return render_template('ehr_fees.html', title='EHR Fees', kfees=fees
      )
 
 
@@ -667,7 +663,7 @@ def add_department():
     if request.method == 'POST':
         department_name = request.form.get('department_name')
         department_id = request.form.get('department_id')
-        department_typ = request.form.get('department_typ')  # Correct the name
+        department_typ = request.form.get('department_typ')
         department_abbreviation = request.form.get('department_abbreviation')
         
         # Insert the new department into the database

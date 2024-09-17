@@ -58,15 +58,9 @@ def calculate_age(dob):
 def get_registration_fee(dob):
     age = calculate_age(dob)
     if age <= 14:
-        #filtering with case sensitivity
-        # ehr_fee_info =  mongo.db.ehr_fees.find_one({"service_name": "NEW CHILD GOPD REGISTRATION"})
-        # filtering without case sensitivity
-        ehr_fee_info = mongo.db.ehr_fees.find_one({"service_name": {"$regex": "^NEW CHILD GOPD REGISTRATION$", "$options": "i"}})
+        ehr_fee_info =  mongo.db.ehr_fees.find_one({"service_name": "NEW CHILD GOPD REGISTRATION"})
     else:
-        # filtering with case sensitivity
-        # ehr_fee_info = mongo.db.ehr_fees.find_one({"service_name": "NEW ADULT GOPD REGISTRATION"})
-        # filtering without case sensitivity
-        ehr_fee_info = mongo.db.ehr_fees.find_one({"service_name": {"$regex": "^NEW ADULT GOPD REGISTRATION$", "$options": "i"}})
+        ehr_fee_info = mongo.db.ehr_fees.find_one({"service_name": "NEW ADULT GOPD REGISTRATION"})
     return f"{ehr_fee_info['service_name']} - {ehr_fee_info['service_fee']} - {ehr_fee_info['service_code']}"
 
 # helping function for requiring admin or a specific role
@@ -159,8 +153,8 @@ def add_employee():
 # Admin dashboard
 @app.route('/admin/')
 @app.route('/admin/dashboard')
-# # @login_required
-# @role_required('admin-user')
+@login_required
+@role_required('admin-user')
 def admin_dashboard():
     print(session)
     email_name = session.get('email', 'Guest')
@@ -169,8 +163,8 @@ def admin_dashboard():
 
 
 @app.route('/admin/edit_user/<user_id>', methods=['GET', 'POST'])
-# @login_required
-# @role_required('admin-user')
+@login_required
+@role_required('admin-user')
 def edit_user(user_id):
     # Fetch user data from MongoDB
     user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
@@ -211,8 +205,8 @@ def edit_user(user_id):
     return render_template('edit_user.html', user=user)
 
 @app.route('/admin/edit_employee/<employee_id>', methods=['GET', 'POST'])
-# @role_required('admin-user')
-# @login_required
+@role_required('admin-user')
+@login_required
 def edit_employee(employee_id):
     """Route to edit a user."""
     # Logic to edit the user with the given user_id
@@ -224,15 +218,15 @@ def edit_employee(employee_id):
 
 
 @app.route('/admin/delete_user/<user_id>', methods=['POST'])
-# @login_required
-# @role_required('admin-user')
+@login_required
+@role_required('admin-user')
 def delete_user(user_id):
     mongo.db.users.delete_one({'_id': ObjectId(user_id)})
     flash('User deleted successfully!', 'danger')
     return redirect(url_for('user_list'))
 @app.route('/admin/delete_employee/<employee_id>', methods=['GET', 'POST'])
-# @login_required
-# @role_required('admin-user')
+@login_required
+@role_required('admin-user')
 def delete_employee(employee_id):
     """Route to edit a user."""
     # Logic to edit the user with the given user_id
@@ -363,7 +357,70 @@ def refresh_request():
 def request_dashboard():
     """dashboard to make request"""
     return render_template('request_dashboard.html', title='Request Dashboard')
+# @app.route('/clinical/new_patient', methods=['GET', 'POST'])
+# @login_required
+# @admin_or_role_required('clinical-services')
+# def new_patient():
+#     timenow = datetime.now()  # Get current date and time
+#     formatted_time = timenow.strftime('%Y-%m-%d %H:%M:%S %p')
+#     print(formatted_time)
+#     if request.method == 'POST':
+#         # Get data from the form
+#         patient_first_name = request.form.get('patient_first_name')
+#         patient_middle_name = request.form.get('patient_middle_name')
+#         patient_surname_name = request.form.get('patient_surname_name')
+#         dob = request.form.get('age')
+#         gender = request.form.get('gender')
+#         phone_number = request.form.get('patient-pno')
+#         next_of_kin_phone_number = request.form.get('patient-nextofkinpno')
+#         address = request.form.get('address')
 
+#         # Fetch the last EHR number and increment it
+#         # last_patient = mongo.db.patients.find_one(sort=[("ehr_number", -1)])
+
+#         # if last_patient:
+#         #     last_ehr_number = int(last_patient['ehr_number'])
+#         # else:
+#         #     # If no patients exist, start with EHR number 1
+#         #     last_ehr_number = 0
+
+#         # Increment the EHR number
+#         # new_ehr_number = last_ehr_number + 1
+
+#         # # Format the EHR number as a 6-digit number (e.g., 000001)
+#         # formatted_ehr_number = f'{new_ehr_number:06d}'
+
+#         # Generate a unique hospital number (UUID)
+#         hospital_number = str(uuid.uuid4())
+
+#         # Check if the patient already exists
+#         # existing_patient = mongo.db.patients.find_one({'ehr_number': formatted_ehr_number})
+#         existing_patient = mongo.db.patients.find_one({'hospital_number': hospital_number})
+#         if existing_patient:
+#             flash(f'Patient with Hospital Number {hospital_number} already exists.', 'warning')
+#         else:
+#             # Save patient data to MongoDB
+#             new_patient = {
+#                 'patient_first_name': patient_first_name,
+#                 'patient_middle_name': patient_middle_name,
+#                 'patient_surname_name': patient_surname_name,
+#                 'dob': dob,
+#                 'gender': gender,
+#                 'phone_number': phone_number,
+#                 'next_of_kin_phone_number': next_of_kin_phone_number,
+#                 'address': address,
+#                 # 'ehr_number': formatted_ehr_number,
+#                 'created': str(formatted_time),  # Add timestamp
+#                 'registered_by': 'None',    # Dummy data for registered_by
+#                 'status': 'Active',         # New field for user status
+#                 'hospital_number': hospital_number  # New field for unique UUID
+#             }
+#             mongo.db.patients.insert_one(new_patient)
+#             flash(f'Patient enrolled successfully with Hospital Number: {hospital_number}!', 'success')
+
+#         return redirect(url_for('clinical_dashboard'))
+
+    # return render_template('new_patient.html', title='New Patient Enrollment')
 @app.route('/clinical/new_patient', methods=['GET', 'POST'])
 @login_required
 @admin_or_role_required('clinical-services')
@@ -491,8 +548,8 @@ def follow_up():
     return render_template('follow_up.html', title='Follow-Up Visit')
 # Add user route
 @app.route('/admin/add_user', methods=['GET', 'POST'])
-# @login_required
-# @role_required('admin-user')
+@login_required
+@role_required('admin-user')
 def add_user():
     if request.method == 'POST':
         firstname = request.form.get('firstname')
@@ -509,10 +566,10 @@ def add_user():
         phonenumber = request.form.get('phonenumber')
 
         # Check if user already exists
-        # existing_user = mongo.db.users.find_one({'email': email})
-        # if existing_user:
-        #     flash('User with this email already exists.', 'danger')
-        #     return redirect(url_for('add_user'))
+        existing_user = mongo.db.users.find_one({'email': email})
+        if existing_user:
+            flash('User with this email already exists.', 'danger')
+            return redirect(url_for('add_user'))
 
         # Check if EHR number already exists
         # existing_ehr = mongo.db.users.find_one({'ehr_number': ehr_number})
@@ -536,15 +593,15 @@ def add_user():
             'role': role,
             'department': department,
         }
-        # mongo.db.users.insert_one(new_user)
+        mongo.db.users.insert_one(new_user)
 
         # flash(f'User added successfully with EHR Number: {ehr_number}!', 'success')
         return redirect(url_for('admin_dashboard'))
 
     return render_template('add_user.html', title='Add User')
 @app.route('/admin/user_list')
-# @login_required 
-# @role_required('admin-user')
+@login_required 
+@role_required('admin-user')
 def user_list():
     """this shows the list of users created"""
     all_users = mongo.db.users.find()
@@ -578,8 +635,8 @@ def add_ehr_fee():
         return redirect(url_for('manage_ehr_fees'))
     return render_template('add_ehr_fee.html', departments=departments)
 @app.route('/admin/mange_ehr_fees', methods=['GET', 'POST'])
-# @login_required
-# @role_required('admin-user')
+@login_required
+@role_required('admin-user')
 def manage_ehr_fees():
     """Display the EHR Fees table and handle adding new fees."""
     if request.method == 'POST':
@@ -598,8 +655,10 @@ def manage_ehr_fees():
         return redirect(url_for('ehr_fees'))
 
     # Retrieve all EHR fees
-    fees = mongo.db.ehr_fees.find()
-    return render_template('ehr_fees.html', title='EHR Fees', kfees=fees
+    # fees = mongo.db.ehr_fees.find()
+    return render_template('ehr_fees.html', title='EHR Fees'
+    ,
+    #  fees=fees
      )
 
 
@@ -657,16 +716,14 @@ def list_departments():
 @app.route('/admin/add_department', methods=['GET', 'POST'])
 @login_required
 @role_required('admin-user')
-@role_required('admin-user')
 def add_department():
     """Add a new department"""
     if request.method == 'POST':
         department_name = request.form.get('department_name')
         department_id = request.form.get('department_id')
-        department_typ = request.form.get('department_typ')
+        department_typ = request.form.get('department_typ')  # Correct the name
         department_abbreviation = request.form.get('department_abbreviation')
         
-        # Insert the new department into the database
         mongo.db.departments.insert_one({
             'department_name': department_name,
             'department_id': department_id,
@@ -676,8 +733,9 @@ def add_department():
         
         flash('Department added successfully!', 'success')
         return redirect(url_for('list_departments'))
-
+    
     return render_template('add_department.html', title='Add Department')
+
 @app.route('/admin/edit_department/<department_id>', methods=['GET', 'POST'])
 @login_required
 @role_required('admin-user')
@@ -724,8 +782,6 @@ def delete_department(department_id):
 def ward_login():
     # Fetch departments with department_typ 'ward'
     wards = mongo.db.departments.find({'department_typ': 'ward'})
-    #find departments with department_type 'ward' but not case sensitive
-    # wards = mongo.db.departments.find({'department_typ': {'$regex': '^ward$', '$options': 'i'}})
     print(session)
     if request.method == 'POST':
         selected_ward_id = request.form.get('ward')
@@ -781,10 +837,10 @@ def in_patient_request():
                 session['current_request'] = current_request
                 
                 # Flash a success message
-                flash(f'Request created successfully for {current_patient.get('patient_name', 'Unknown')}', 'success')
+                flash('Request created successfully', 'success')
                 
                 # Render a page that shows the request details
-                return redirect(url_for('clinical_dashboard'))
+                return render_template('request_details.html', request_details=current_request)
             
             # Handle potential JSON decoding errors
             except json.JSONDecodeError as e:
@@ -794,7 +850,7 @@ def in_patient_request():
             flash('No service selected', 'error')
     
     # Redirect to the dashboard if no POST request or in case of errors
-    return 'Error'
+    return redirect(url_for('clinical_dashboard'))
 @app.route('/logout')
 def logout():
     # session.pop('email', None)

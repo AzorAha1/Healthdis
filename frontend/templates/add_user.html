@@ -32,7 +32,7 @@
                             <input type="text" class="form-control" id="lastname" name="lastname" required>
                         </div>
                         <div class="form-group">
-                            <label for="ippisno">IPPIS NO</label>
+                            <label for="ippisno">IPPIS NO:</label>
                             <input type="text" class="form-control" id="ippisno" name="ippisno">
                         </div>
                         <div class="form-group">
@@ -57,12 +57,26 @@
                         </div>
                         <div class="form-group">
                             <label for="role">Role:</label>
-                            <select class="form-control" id="role" name="role" required>
+                            <select class="form-control" id="role" name="role" required onchange="toggleClinicalRoleFields()">
                                 <option value="">---Select---</option>
                                 <option value="admin-user">Admin User</option>
                                 <option value="medpay-user">MedPay User</option>
                                 <option value="clinical-services">Clinical Services</option>
                             </select>
+                        </div>
+                        <div id="clinical-role-fields" style="display: none;">
+                            <div class="form-group">
+                                <label>What are you below:</label><br>
+                                <label><input type="radio" name="clinical_role" value="doctor"> Doctor</label><br>
+                                <label><input type="radio" name="clinical_role" value="nurse"> Nurse</label><br>
+                                <label><input type="radio" name="clinical_role" value="pharmacist"> Pharmacist</label><br>
+                                <label><input type="radio" name="clinical_role" value="radiographer">Radiographer</label><br>
+                                <label><input type="radio" name="clinical_role" value="other"> Other</label><br>
+                            </div>
+                            <div class="form-group">
+                                <label for="position">Position:</label>
+                                <input type="text" class="form-control" id="position" name="position">
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="department">Department:</label>
@@ -89,3 +103,16 @@
 </div>
 
 {% include 'include_admin/footer.html' %}
+
+<script>
+    function toggleClinicalRoleFields() {
+        var role = document.getElementById('role').value;
+        var clinicalRoleFields = document.getElementById('clinical-role-fields');
+
+        if (role === 'clinical-services') {
+            clinicalRoleFields.style.display = 'block';
+        } else {
+            clinicalRoleFields.style.display = 'none';
+        }
+    }
+</script>

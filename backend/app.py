@@ -498,36 +498,36 @@ def make_payment():
             'Status': 'Paid'
         }
         
-        try:
-            # Insert the payment record
-            mongo.db.payments.insert_one(payments)
+        # try:
+        #     # Insert the payment record
+        #     mongo.db.payments.insert_one(payments)
             
-            patient_age = calculate_age(request.form.get('dob'))
-            # Remove the request from the requests collection
-            mongo.db.requests.delete_one({'_id': ObjectId(request_id)})
-            if patient_age > 14:  # Adult
-                # Add to HIMS dashboard queue
-                mongo.db.hims_queue.insert_one({
-                    'ehr_number': new_ehr_number,
-                    'patient_name': patient_Number,
-                    'registration_date': datetime.now(),
-                    'status': 'Pending'
-                })
-                flash(f'Payment processed for {service_name} ({service_code}). Patient added to HIMS queue.', 'success')
-            else:  # Child
-                # Add to pediatric department queue (you'll need to create this collection)
-                mongo.db.pediatric_queue.insert_one({
-                    'ehr_number': new_ehr_number,
-                    'patient_name': patient_Number,
-                    'registration_date': datetime.now(),
-                    'status': 'Pending'
-                })
-                flash(f'Payment processed for {service_name} ({service_code}. Check Paediatric to find Patient', 'success')
-            flash(f'Payment processed for {service_name} ({service_code})', 'success')
-            return render_template('make_payment.html', userinfos=request_details, payments=payments, title='Payment Successful')
-        except Exception as e:
-            flash(f'Error processing payment: {str(e)}', 'error')
-            return redirect(url_for('pos_terminal'))
+        #     patient_age = calculate_age(request.form.get('dob'))
+        #     # Remove the request from the requests collection
+        #     mongo.db.requests.delete_one({'_id': ObjectId(request_id)})
+        #     if patient_age > 14:  # Adult
+        #         # Add to HIMS dashboard queue
+        #         mongo.db.hims_queue.insert_one({
+        #             'ehr_number': new_ehr_number,
+        #             'patient_name': patient_Number,
+        #             'registration_date': datetime.now(),
+        #             'status': 'Pending'
+        #         })
+        #         flash(f'Payment processed for {service_name} ({service_code}). Patient added to HIMS queue.', 'success')
+        #     else:  # Child
+        #         # Add to pediatric department queue (you'll need to create this collection)
+        #         mongo.db.pediatric_queue.insert_one({
+        #             'ehr_number': new_ehr_number,
+        #             'patient_name': patient_Number,
+        #             'registration_date': datetime.now(),
+        #             'status': 'Pending'
+        #         })
+        #         flash(f'Payment processed for {service_name} ({service_code}. Check Paediatric to find Patient', 'success')
+        flash(f'Payment processed for {service_name} ({service_code})', 'success')
+        return render_template('make_payment.html', userinfos=request_details, payments=payments, title='Payment Successful')
+        # except Exception as e:
+        #     flash(f'Error processing payment: {str(e)}', 'error')
+        #     return redirect(url_for('pos_terminal'))
     
     # Handle GET requests
     return redirect(url_for('pos_terminal'))

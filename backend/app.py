@@ -129,90 +129,7 @@ def login():
 def nurses_dashboard():
     """this is the nurses dashboard"""
     return render_template('nurses_dashboard.html', title='Nurses Dashboard')
-# @app.route('/admin/add_nurse', methods=['GET', 'POST'])
-# @login_required
-# @role_required('admin-user')
-# def add_nurse():
-#     """add nurse route"""
-#     timenow = datetime.now()  # Get current date and time
-#     formatted_time = timenow.strftime('%Y-%m-%d %H:%M:%S %p')
-#     if request.method == 'POST':
-#         firstname = request.form.get('first_name')
-#         lastname = request.form.get('last_name')
-#         email = request.form.get('email')
-#         assigned_department = request.form.get('assigned_department')
-#         dob = request.form.get('dob')
-#         phone_number = request.form.get('phone_number')
 
-#         # Check if nurse already exists
-#         if not firstname or not lastname:
-#             flash('First name and last name are required.', 'danger')
-#             return redirect(url_for('add_nurse'))
-
-#         if not email or not '@' in email:
-#             flash('A valid email address is required.', 'danger')
-#             return redirect(url_for('add_nurse'))
-
-#         if not phone_number or not phone_number.isdigit():
-#             flash('A valid phone number is required.', 'danger')
-#             return redirect(url_for('add_nurse'))
-#         existing_nurse = mongo.db.nurses.find_one({'email': email})
-#         if existing_nurse:
-#             flash('Nurse with this email already exists.', 'danger')
-#             return redirect(url_for('add_nurse'))
-
-#         new_nurse = {
-#             'firstname': firstname,
-#             'lastname': lastname,
-#             'email': email,
-#             'assigned_department': assigned_department,
-#             'dob': dob,
-#             'phone_number': phone_number,
-#             'created': str(formatted_time)  # Track when the record was created
-#         }
-        
-#         mongo.db.nurses.insert_one(new_nurse)
-#         flash('Nurse added successfully!', 'success')
-#         return redirect(url_for('admin_dashboard'))
-#     departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
-#     department_list = [dept['department_name'] for dept in departments]
-#     return render_template('add_nurse.html', title='Add Nurse', departments=department_list)
-# @app.route('/admin/add_doctor', methods=['GET', 'POST'])
-# @login_required
-# @role_required('admin-user')
-# def add_doctor():
-#     """add doctor route"""
-#     timenow = datetime.now()  # Get current date and time
-#     formatted_time = timenow.strftime('%Y-%m-%d %H:%M:%S %p')
-#     if request.method == 'POST':
-#         firstname = request.form.get('first_name')
-#         lastname = request.form.get('last_name')
-#         email = request.form.get('email')
-#         assigned_department = request.form.get('assigned_department')
-#         dob = request.form.get('dob')
-#         phone_number = request.form.get('phone_number')
-
-#         # Check if doctor already exists
-#         existing_doctor = mongo.db.doctors.find_one({'email': email})
-#         if existing_doctor:
-#             flash('Doctor with this email already exists.', 'danger')
-#             return redirect(url_for('add_nurse'))
-
-#         new_doctor = {
-#             'firstname': firstname,
-#             'lastname': lastname,
-#             'email': email,
-#             'assigned_department': assigned_department,
-#             'dob': dob,
-#             'phone_number': phone_number,
-#             'created': str(formatted_time)  # Track when the record was created
-#         }
-#         mongo.db.doctors.insert_one(new_doctor)
-#         flash('Nurse added successfully!', 'success')
-#         return redirect(url_for('admin_dashboard'))
-#     departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
-#     department_list = [dept['department_name'] for dept in departments]
-#     return render_template('add_doctor.html', title='Add Doctor', departments=department_list)
 @app.route('/clinical/doctors_dashboard')
 @role_required('doctors')
 @login_required
@@ -304,38 +221,7 @@ def edit_user(user_id):
     
     return render_template('edit_user.html', user=user)
 
-@app.route('/admin/edit_employee/<employee_id>', methods=['GET', 'POST'])
-@role_required('admin-user')
-@login_required
-def edit_employee(employee_id):
-    """Route to edit a user."""
-    # Logic to edit the user with the given user_id
-    employee = mongo.db.employee.find_one({'_id': ObjectId(employee_id)})
-    if request.method == 'POST':
-        # Handle the form submission to edit the user
-        pass
-    return render_template('edit_user.html', employee=employee)
 
-
-@app.route('/admin/delete_user/<user_id>', methods=['POST'])
-@login_required
-@role_required('admin-user')
-def delete_user(user_id):
-    mongo.db.users.delete_one({'_id': ObjectId(user_id)})
-    flash('User deleted successfully!', 'danger')
-    return redirect(url_for('user_list'))
-@app.route('/admin/delete_employee/<employee_id>', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
-def delete_employee(employee_id):
-    """Route to edit a user."""
-    # Logic to edit the user with the given user_id
-    employee = mongo.db.employees.find_one({'_id': ObjectId(employee_id)})
-    if request.method == 'POST':
-        # Handle the form submission to edit the user
-        pass
-    return render_template('edit_user.html', employee=employee)
-# Clinical services dashboard
 
 @app.route('/clinical/')
 @app.route('/clinical/dashboard')
@@ -363,8 +249,13 @@ def clinical_dashboard():
                            current_patient=current_patient, 
                            ward_name=ward_name, 
                            services=services_list)
+
 @login_required
-@role_required('clini')
+@admin_or_role_required('clinical-services')
+@app.route('/clinical/hims_dashboard')
+def hims_dashboard():
+    """this is the hims dashboard"""
+    return render_template('hims_dashboard.html', title='HIMS Dashboard')
 @app.route('/clinical/patient_list')
 @login_required
 @admin_or_role_required('clinical-services')
@@ -611,9 +502,27 @@ def make_payment():
             # Insert the payment record
             mongo.db.payments.insert_one(payments)
             
+            patient_age = calculate_age(request.form.get('dob'))
             # Remove the request from the requests collection
             mongo.db.requests.delete_one({'_id': ObjectId(request_id)})
-            
+            if patient_age > 14:  # Adult
+                # Add to HIMS dashboard queue
+                mongo.db.hims_queue.insert_one({
+                    'ehr_number': new_ehr_number,
+                    'patient_name': patient_Number,
+                    'registration_date': datetime.now(),
+                    'status': 'Pending'
+                })
+                flash(f'Payment processed for {service_name} ({service_code}). Patient added to HIMS queue.', 'success')
+            else:  # Child
+                # Add to pediatric department queue (you'll need to create this collection)
+                mongo.db.pediatric_queue.insert_one({
+                    'ehr_number': new_ehr_number,
+                    'patient_name': patient_Number,
+                    'registration_date': datetime.now(),
+                    'status': 'Pending'
+                })
+                flash(f'Payment processed for {service_name} ({service_code}. Check Paediatric to find Patient', 'success')
             flash(f'Payment processed for {service_name} ({service_code})', 'success')
             return render_template('make_payment.html', userinfos=request_details, payments=payments, title='Payment Successful')
         except Exception as e:
@@ -635,9 +544,12 @@ def medpay_dashboard():
 @login_required
 @admin_or_role_required('medpay-user')
 def pos_terminal():
+    # Initialize `requests` as an empty list by default
+    requests = []
+
     if request.method == 'POST':
         search_term = request.form.get('ehr_number')  # This can be EHR number or enrollment code
-        if search_term: 
+        if search_term:
             # Search for requests matching the search term
             requests = mongo.db.requests.find({
                 '$or': [
@@ -645,10 +557,14 @@ def pos_terminal():
                     {'Service_Code': search_term},  # Assuming Service_Code is used for enrollment_code
                 ]
             })
+        else:
+            # Handle the case where the search term is missing
+            flash('Please provide a valid EHR number or Service Code', 'error')
     else:
+        # In case of a GET request, show all requests
         requests = mongo.db.requests.find() 
-    return render_template('pos_terminal.html', requests=requests, title='POS Terminal')
 
+    return render_template('pos_terminal.html', requests=requests, title='POS Terminal')
 @login_required
 @admin_or_role_required('clinical-services')
 @app.route('/clinical/follow_up', methods=['GET', 'POST'])  

@@ -254,10 +254,35 @@ def clinical_dashboard():
 @admin_or_role_required('clinical-services')
 @app.route('/clinical/hims_dashboard')
 def hims_dashboard():
-    """this is the hims dashboard"""
-    hims_queue_data = mongo.db.hims_queue.find()
-    hims_queue_list = list(hims_queue_data)
-    return render_template('hims_dashboard.html', title='HIMS Dashboard', hims_queue=hims_queue_list)
+    """HIMS dashboard with separated queues"""
+    pending_queue = list(mongo.db.hims_queue.find({'status': 'Pending'}))
+    processed_queue = list(mongo.db.hims_queue.find({'status': {'$ne': 'Pending'}}))
+    return render_template('hims_dashboard.html', title='HIMS Dashboard', pending_queue=pending_queue, processed_queue=processed_queue)
+@login_required
+@admin_or_role_required('clinical-services')
+@app.route('/clinical/send_to_nurse/<ehr_number>', methods=['GET', 'POST'])
+def send_to_nurse(ehr_number):
+    patient = mongo.db.hims_queue.find_one({'ehr_number': ehr_number})
+    clinics = mongo.db.departments.find({'department_typ': 'clinic'})
+    
+    if not patient:
+        flash('Patient not found in the HIMS queue', 'danger')
+        return redirect(url_for('hims_dashboard'))
+    
+    if request.method == 'POST':
+        selected_clinic_id = request.form.get('clinic')
+        if selected_clinic_id:
+            # Update patient's status or move them to the selected clinic
+            mongo.db.hims_queue.update_one(
+                {'ehr_number': ehr_number},
+                {'$set': {'status': 'Sent to Nurse', 'assigned_clinic': selected_clinic_id}}
+            )
+            flash('Patient successfully sent to the selected clinic', 'success')
+            return redirect(url_for('hims_dashboard'))
+        else:
+            flash('Please select a clinic', 'warning')
+    
+    return render_template('send_to_nurse.html', title='Send to Nurse', patient=patient, clinics=clinics)
 @app.route('/clinical/patient_list')
 @login_required
 @admin_or_role_required('clinical-services')
@@ -448,6 +473,7 @@ def new_patient():
 def make_payment():
     if request.method == 'POST':
         request_id = request.form.get('request_id')
+        is_new_patient =  False
         if not request_id:
             flash('No request ID provided', 'error')
             return redirect(url_for('pos_terminal'))
@@ -487,9 +513,10 @@ def make_payment():
                 {'$set': {'ehr_number': new_ehr_number},
                 '$unset': {'temp_ehr_number': 1}}
             )
+            is_new_patient = True
         else:
             new_ehr_number = patient_data.get('ehr_number')
-        
+            is_new_patient = False
         patient_Number = request_details.get('patient_Number')
         requested_by = session.get('email', 'Unknown')
         service_name = request_details.get('Service_Name')
@@ -521,7 +548,7 @@ def make_payment():
             # Calculate age and determine queue
             if dob:
                 patient_age = calculate_age(dob)
-                if patient_age > 14:  # Adult
+                if patient_age > 14 and is_new_patient:  # Adult
                     mongo.db.hims_queue.insert_one({
                         'ehr_number': new_ehr_number,
                         'patient_name': patient_Number,

@@ -1,78 +1,115 @@
 {% include 'include_clinical/header.html' %}
 {% include 'include_clinical/sidebar.html' %}
-
 <div class="content-wrapper">
     <section class="content-header">
-        <h1>
-            Dashboard
-            <small></small>
-        </h1>
+        <h1>HIMS Dashboard</h1>
         <ol class="breadcrumb">
             <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
             <li class="active">Dashboard</li>
         </ol>
-        <h1>{{ ward_name }}</h1>
     </section>
-
+    
     <section class="content">
         <!-- Display Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=True) %}
             {% if messages %}
                 <div id="flash-messages" class="alert-container">
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">
-                            {{ message }}
-                        </div>
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
                     {% endfor %}
                 </div>
             {% endif %}
         {% endwith %}
 
+        <!-- Pending Queue -->
         <div class="row">
             <div class="col-md-12">
-                <h2>HIMS Queue</h2>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>EHR Number</th>
-                            <th>Patient Name</th>
-                            <th>Registration Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in hims_queue %}
-                            <tr>
-                                <td>{{ item.ehr_number }}</td>
-                                <td>{{ item.patient_name }}</td>
-                                <td>{{ item.registration_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>  <!-- Format date if necessary -->
-                                <td>{{ item.status }}</td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="4" class="text-center">No patients in the queue.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Pending Patients</h3>
+                    </div>
+                    <div class="box-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>EHR Number</th>
+                                    <th>Patient Name</th>
+                                    <th>Registration Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in pending_queue %}
+                                    <tr>
+                                        <td>{{ item.ehr_number }}</td>
+                                        <td>{{ item.patient_name }}</td>
+                                        <td>{{ item.registration_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                        <td>
+                                            <a href="{{ url_for('send_to_nurse', ehr_number=item.ehr_number) }}" class="btn btn-warning btn-xs">Send to Nurse</a>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No pending patients in the queue.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processed Queue -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-success">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Processed Patients</h3>
+                    </div>
+                    <div class="box-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>EHR Number</th>
+                                    <th>Patient Name</th>
+                                    <th>Registration Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in processed_queue %}
+                                    <tr>
+                                        <td>{{ item.ehr_number }}</td>
+                                        <td>{{ item.patient_name }}</td>
+                                        <td>{{ item.registration_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                        <td>{{ item.status }}</td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No processed patients in the queue.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 </div>
-
 {% include 'include_clinical/footer.html' %}
 
-<!-- Add the JavaScript to hide flash messages after a delay -->
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const flashMessages = document.getElementById('flash-messages');
-        if (flashMessages) {
+document.addEventListener('DOMContentLoaded', function() {
+    const flashMessages = document.getElementById('flash-messages');
+    if (flashMessages) {
+        setTimeout(() => {
+            flashMessages.style.opacity = 0;
             setTimeout(() => {
-                flashMessages.style.opacity = 0;
-                setTimeout(() => {
-                    flashMessages.remove();
-                }, 500); // Match this with the CSS transition duration
-            }, 3000); // Time in milliseconds (3 seconds)
-        }
-    });
+                flashMessages.remove();
+            }, 500); // Match this with the CSS transition duration
+        }, 3000); // Time in milliseconds (3 seconds)
+    }
+});
 </script>

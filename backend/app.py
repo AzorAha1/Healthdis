@@ -255,7 +255,9 @@ def clinical_dashboard():
 @app.route('/clinical/hims_dashboard')
 def hims_dashboard():
     """this is the hims dashboard"""
-    return render_template('hims_dashboard.html', title='HIMS Dashboard')
+    hims_queue_data = mongo.db.hims_queue.find()
+    hims_queue_list = list(hims_queue_data)
+    return render_template('hims_dashboard.html', title='HIMS Dashboard', hims_queue=hims_queue_list)
 @app.route('/clinical/patient_list')
 @login_required
 @admin_or_role_required('clinical-services')
@@ -452,6 +454,7 @@ def make_payment():
         
         try:
             request_details = mongo.db.requests.find_one({'_id': ObjectId(request_id)})
+            print(f'request details: {request_details}')
         except:
             flash('Invalid request ID', 'error')
             return redirect(url_for('pos_terminal'))
@@ -460,22 +463,32 @@ def make_payment():
             flash('Request not found', 'error')
             return redirect(url_for('pos_terminal'))
         
-        patient_hospital_number = request_details.get('patient_hospital_number')
-        patient_update = mongo.db.patients.find_one({'hospital_number': patient_hospital_number})
+        # Use ehr_number or temp_ehr_number to find the patient
+        ehr_number = request_details.get('ehr_number')
+        patient_data = mongo.db.patients.find_one({
+            '$or': [
+                {'ehr_number': ehr_number},
+                {'temp_ehr_number': ehr_number}
+            ]
+        })
         
-        if patient_update:
-            if 'ehr_number' not in patient_update:
-                new_ehr_number = generate_ehr_number()
-                mongo.db.patients.update_one(
-                    {'hospital_number': patient_hospital_number},
-                    {'$set': {'ehr_number': new_ehr_number},
-                    '$unset': {'temp_ehr_number': 1}}
-                )
-            else:
-                new_ehr_number = patient_update['ehr_number']
-        else:
+        if not patient_data:
             flash('Patient not found', 'error')
             return redirect(url_for('pos_terminal'))
+        
+        patient_hospital_number = patient_data.get('hospital_number')
+        dob = patient_data.get('dob')
+        
+        # Check if this is a new patient (has temp_ehr_number but no ehr_number)
+        if 'temp_ehr_number' in patient_data and 'ehr_number' not in patient_data:
+            new_ehr_number = generate_ehr_number()
+            mongo.db.patients.update_one(
+                {'hospital_number': patient_hospital_number},
+                {'$set': {'ehr_number': new_ehr_number},
+                '$unset': {'temp_ehr_number': 1}}
+            )
+        else:
+            new_ehr_number = patient_data.get('ehr_number')
         
         patient_Number = request_details.get('patient_Number')
         requested_by = session.get('email', 'Unknown')
@@ -498,41 +511,42 @@ def make_payment():
             'Status': 'Paid'
         }
         
-        # try:
-        #     # Insert the payment record
-        #     mongo.db.payments.insert_one(payments)
+        try:
+            # Insert the payment record
+            mongo.db.payments.insert_one(payments)
             
-        #     patient_age = calculate_age(request.form.get('dob'))
-        #     # Remove the request from the requests collection
-        #     mongo.db.requests.delete_one({'_id': ObjectId(request_id)})
-        #     if patient_age > 14:  # Adult
-        #         # Add to HIMS dashboard queue
-        #         mongo.db.hims_queue.insert_one({
-        #             'ehr_number': new_ehr_number,
-        #             'patient_name': patient_Number,
-        #             'registration_date': datetime.now(),
-        #             'status': 'Pending'
-        #         })
-        #         flash(f'Payment processed for {service_name} ({service_code}). Patient added to HIMS queue.', 'success')
-        #     else:  # Child
-        #         # Add to pediatric department queue (you'll need to create this collection)
-        #         mongo.db.pediatric_queue.insert_one({
-        #             'ehr_number': new_ehr_number,
-        #             'patient_name': patient_Number,
-        #             'registration_date': datetime.now(),
-        #             'status': 'Pending'
-        #         })
-        #         flash(f'Payment processed for {service_name} ({service_code}. Check Paediatric to find Patient', 'success')
-        flash(f'Payment processed for {service_name} ({service_code})', 'success')
-        return render_template('make_payment.html', userinfos=request_details, payments=payments, title='Payment Successful')
-        # except Exception as e:
-        #     flash(f'Error processing payment: {str(e)}', 'error')
-        #     return redirect(url_for('pos_terminal'))
+            # Remove the request from the requests collection
+            mongo.db.requests.delete_one({'_id': ObjectId(request_id)})
+            
+            # Calculate age and determine queue
+            if dob:
+                patient_age = calculate_age(dob)
+                if patient_age > 14:  # Adult
+                    mongo.db.hims_queue.insert_one({
+                        'ehr_number': new_ehr_number,
+                        'patient_name': patient_Number,
+                        'registration_date': datetime.now(),
+                        'status': 'Pending'
+                    })
+                    flash(f'Payment processed for {service_name} ({service_code}). Patient added to HIMS queue.', 'success')
+                else:  # Child
+                    mongo.db.pediatric_queue.insert_one({
+                        'ehr_number': new_ehr_number,
+                        'patient_name': patient_Number,
+                        'registration_date': datetime.now(),
+                        'status': 'Pending'
+                    })
+                    flash(f'Payment processed for {service_name} ({service_code}). Check Paediatric to find Patient', 'success')
+            else:
+                flash(f'Payment processed for {service_name} ({service_code}). Unable to determine queue due to missing DOB.', 'warning')
+            
+            return render_template('make_payment.html', userinfos=request_details, payments=payments, title='Payment Successful')
+        except Exception as e:
+            flash(f'Error processing payment: {str(e)}', 'error')
+            return redirect(url_for('pos_terminal'))
     
     # Handle GET requests
     return redirect(url_for('pos_terminal'))
-   
-# MedPay dashboard
 @app.route('/medpay/')
 @app.route('/medpay/dashboard')
 @login_required

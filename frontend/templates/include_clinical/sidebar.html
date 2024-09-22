@@ -27,7 +27,7 @@
             </span>
           </a>
           <ul class="treeview-menu">
-            <li><a href="#"> </i> HIM Dashboard</a></li>
+            <li><a href="{{ url_for('hims_dashboard') }}"> </i> HIM Dashboard</a></li>
             <!-- <li><a class="popup" onclick="myFunction()"> </i> New Patient Enrolment<span class="popuptext" id="myPopup">Get full version at mayuri.infospace@gmail.com</span></a></li> -->
             <li class="popup" id="myPopup"><a href="{{ url_for('new_patient') }}">New Patient Enrollment</a></li>
             <li><a href="{{ url_for('search_patient') }}"> </i> Update patient Record</a></li>

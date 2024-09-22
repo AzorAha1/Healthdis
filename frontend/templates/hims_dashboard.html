@@ -29,9 +29,35 @@
         {% endwith %}
 
         <div class="row">
-            
+            <div class="col-md-12">
+                <h2>HIMS Queue</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>EHR Number</th>
+                            <th>Patient Name</th>
+                            <th>Registration Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in hims_queue %}
+                            <tr>
+                                <td>{{ item.ehr_number }}</td>
+                                <td>{{ item.patient_name }}</td>
+                                <td>{{ item.registration_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>  <!-- Format date if necessary -->
+                                <td>{{ item.status }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No patients in the queue.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-           
+    </section>
 </div>
 
 {% include 'include_clinical/footer.html' %}

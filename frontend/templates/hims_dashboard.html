@@ -21,12 +21,32 @@
             {% endif %}
         {% endwith %}
 
+        <!-- Date Filter -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-default">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Date Filter</h3>
+                    </div>
+                    <div class="box-body">
+                        <form method="GET" action="{{ url_for('hims_dashboard') }}" class="form-inline">
+                            <div class="form-group">
+                                <label for="date">Select Date:</label>
+                                <input type="date" id="date" name="date" class="form-control" value="{{ current_date }}">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Pending Queue -->
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-primary">
                     <div class="box-header with-border">
-                        <h3 class="box-title">Pending Patients</h3>
+                        <h3 class="box-title">Pending Patients - {{ current_date }}</h3>
                     </div>
                     <div class="box-body">
                         <table class="table table-bordered">
@@ -34,7 +54,7 @@
                                 <tr>
                                     <th>EHR Number</th>
                                     <th>Patient Name</th>
-                                    <th>Registration Date</th>
+                                    <th>Registration Time</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -43,14 +63,14 @@
                                     <tr>
                                         <td>{{ item.ehr_number }}</td>
                                         <td>{{ item.patient_name }}</td>
-                                        <td>{{ item.registration_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                        <td>{{ item.registration_date.strftime('%H:%M:%S') }}</td>
                                         <td>
                                             <a href="{{ url_for('send_to_nurse', ehr_number=item.ehr_number) }}" class="btn btn-warning btn-xs">Send to Nurse</a>
                                         </td>
                                     </tr>
                                 {% else %}
                                     <tr>
-                                        <td colspan="4" class="text-center">No pending patients in the queue.</td>
+                                        <td colspan="4" class="text-center">No pending patients in the queue for this date.</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
@@ -65,7 +85,7 @@
             <div class="col-md-12">
                 <div class="box box-success">
                     <div class="box-header with-border">
-                        <h3 class="box-title">Processed Patients</h3>
+                        <h3 class="box-title">Processed Patients - {{ current_date }}</h3>
                     </div>
                     <div class="box-body">
                         <table class="table table-bordered">
@@ -73,7 +93,7 @@
                                 <tr>
                                     <th>EHR Number</th>
                                     <th>Patient Name</th>
-                                    <th>Registration Date</th>
+                                    <th>Registration Time</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -82,12 +102,12 @@
                                     <tr>
                                         <td>{{ item.ehr_number }}</td>
                                         <td>{{ item.patient_name }}</td>
-                                        <td>{{ item.registration_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                        <td>{{ item.registration_date.strftime('%H:%M:%S') }}</td>
                                         <td>{{ item.status }}</td>
                                     </tr>
                                 {% else %}
                                     <tr>
-                                        <td colspan="4" class="text-center">No processed patients in the queue.</td>
+                                        <td colspan="4" class="text-center">No processed patients in the queue for this date.</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>

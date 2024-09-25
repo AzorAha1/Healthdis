@@ -108,12 +108,6 @@ def login():
                         else:
                             flash('Admin logged in successfully', 'success')
                             return redirect(url_for('admin_dashboard'))
-                    elif user['role'] == 'doctor':
-                        flash('Doctor logged in successfully', 'success')
-                        return redirect(url_for('doctor_dashboard'))
-                    elif user['role'] == 'nurse':
-                        flash('Nurse logged in successfully', 'success')
-                        return redirect(url_for('nurse_dashboard'))
                 else:
                     flash('Invalid role selected', 'danger')
             else:
@@ -123,12 +117,11 @@ def login():
     
     return render_template('login.html', title='Login')
 
-@app.route('/clinical/nurses_dashboard')
-@role_required('nurses')
-@login_required
-def nurses_dashboard():
-    """this is the nurses dashboard"""
-    return render_template('nurses_dashboard.html', title='Nurses Dashboard')
+@app.route('/clinical/nurses_desk/')
+def nurses_desk():
+    """nurses desk"""
+    departments = mongo.db.departments.find()
+    return render_template('nurses_desk.html', title='Nurses Desk', departments=departments)
 
 @app.route('/clinical/doctors_dashboard')
 @role_required('doctors')
@@ -185,7 +178,7 @@ def admin_dashboard():
 def edit_user(user_id):
     # Fetch user data from MongoDB
     user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
-    
+    departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
     if request.method == 'POST':
         # Get updated values from the form
         firstname = request.form.get('firstname')
@@ -219,8 +212,16 @@ def edit_user(user_id):
         flash('User updated successfully!', 'success')
         return redirect(url_for('user_list'))
     
-    return render_template('edit_user.html', user=user)
+    return render_template('edit_user.html', user=user, departments=departments)
 
+@app.route('/admin/delete_user/<user_id>')
+@login_required
+@role_required('admin-user')
+def delete_user(user_id):
+    """Delete an EHR Fee"""
+    mongo.db.users.delete_one({'_id': ObjectId(user_id)})
+    flash('EHR Fee deleted successfully!', 'success')
+    return redirect(url_for('user_list'))
 
 
 @app.route('/clinical/')
@@ -254,10 +255,36 @@ def clinical_dashboard():
 @admin_or_role_required('clinical-services')
 @app.route('/clinical/hims_dashboard')
 def hims_dashboard():
-    """HIMS dashboard with separated queues"""
-    pending_queue = list(mongo.db.hims_queue.find({'status': 'Pending'}))
-    processed_queue = list(mongo.db.hims_queue.find({'status': {'$ne': 'Pending'}}))
-    return render_template('hims_dashboard.html', title='HIMS Dashboard', pending_queue=pending_queue, processed_queue=processed_queue)
+    """HIMS dashboard with date filtering"""
+    # Get the date filter from the query parameters, default to today
+    date_filter = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+    
+    try:
+        filter_date = datetime.strptime(date_filter, '%Y-%m-%d')
+    except ValueError:
+        flash('Invalid date format. Showing today\'s records.', 'warning')
+        filter_date = datetime.now()
+    
+    # Set the date range for the filter (entire day)
+    start_of_day = filter_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_of_day = start_of_day + timedelta(days=1)
+    
+    # Query for records within the date range
+    date_query = {
+        'registration_date': {
+            '$gte': start_of_day,
+            '$lt': end_of_day
+        }
+    }
+    
+    pending_queue = list(mongo.db.hims_queue.find({**date_query, 'status': 'Pending'}))
+    processed_queue = list(mongo.db.hims_queue.find({**date_query, 'status': {'$ne': 'Pending'}}))
+    
+    return render_template('hims_dashboard.html', 
+                           title='HIMS Dashboard', 
+                           pending_queue=pending_queue, 
+                           processed_queue=processed_queue,
+                           current_date=filter_date.strftime('%m-%d-%Y'))
 @login_required
 @admin_or_role_required('clinical-services')
 @app.route('/clinical/send_to_nurse/<ehr_number>', methods=['GET', 'POST'])
@@ -273,14 +300,32 @@ def send_to_nurse(ehr_number):
         selected_clinic_id = request.form.get('clinic')
         if selected_clinic_id:
             # Update patient's status or move them to the selected clinic
-            mongo.db.hims_queue.update_one(
-                {'ehr_number': ehr_number},
-                {'$set': {'status': 'Sent to Nurse', 'assigned_clinic': selected_clinic_id}}
-            )
-            flash('Patient successfully sent to the selected clinic', 'success')
-            return redirect(url_for('hims_dashboard'))
+            try:
+                selected_clinic_id = ObjectId(selected_clinic_id)
+            except Exception:
+                flash('Invalid clinic ID', 'warning')
+                return redirect(url_for('send_to_nurse', ehr_number=ehr_number))
+            selected_clinic = mongo.db.departments.find_one({'_id': selected_clinic_id})
+            if selected_clinic:
+                mongo.db.hims_queue.update_one(
+                    {'ehr_number': ehr_number},
+                    {'$set': {
+                        'status': 'In Clinic',
+                        'clinic': selected_clinic['department_name']
+                    }}
+                )
+                mongo.db[selected_clinic['department_name'].lower().replace(' ', '_') + '_nurses_queue'].insert_one({
+                    'ehr_number': ehr_number,
+                    'patient_name': patient['patient_name'],
+                    'registration_date': datetime.now(),
+                    'department_name': selected_clinic['department_name'],
+                    'status': 'Pending'
+                })
+                flash(f'Patient sent to {selected_clinic["department_name"]} successfully!', 'success')
+                return redirect(url_for('hims_dashboard'))
         else:
             flash('Please select a clinic', 'warning')
+            return redirect(url_for('send_to_nurse', ehr_number=ehr_number))
     
     return render_template('send_to_nurse.html', title='Send to Nurse', patient=patient, clinics=clinics)
 @app.route('/clinical/patient_list')
@@ -613,9 +658,10 @@ def follow_up():
     return render_template('follow_up.html', title='Follow-Up Visit')
 # Add user route
 @app.route('/admin/add_user', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def add_user():
+    departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
     if request.method == 'POST':
         firstname = request.form.get('firstname')
         middlename = request.form.get('middlename')
@@ -669,10 +715,10 @@ def add_user():
         flash(f'User added successfully with EHR Number: {ehr_number}!', 'success')
         return redirect(url_for('admin_dashboard'))
 
-    return render_template('add_user.html', title='Add User')
+    return render_template('add_user.html', title='Add User', departments=departments)
 @app.route('/admin/user_list')
-@login_required 
-@role_required('admin-user')
+# @login_required 
+# @role_required('admin-user')
 def user_list():
     """this shows the list of users created"""
     all_users = mongo.db.users.find()
@@ -781,6 +827,23 @@ def list_departments():
     departments = mongo.db.departments.find()
     return render_template('department_list.html', title='Department List', departments=departments)
 
+# function to create department
+def create_department(department_id, department_name, department_typ, department_abbreviation):
+    try:
+        department_name_clean = department_name.strip()
+        mongo.db.departments.insert_one({
+            'department_id': department_id,
+            'department_name': department_name_clean,
+            'department_typ': department_typ,
+            'department_abbreviation': department_abbreviation
+        })
+        queue_name = f'{department_name_clean.lower().replace(" ", "_")}_nurses_queue'
+        mongo.db.create_collection(queue_name)
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
 @app.route('/admin/add_department', methods=['GET', 'POST'])
 @login_required
 @role_required('admin-user')
@@ -789,20 +852,43 @@ def add_department():
     if request.method == 'POST':
         department_name = request.form.get('department_name')
         department_id = request.form.get('department_id')
-        department_typ = request.form.get('department_typ')  # Correct the name
+        department_typ = request.form.get('department_typ')
         department_abbreviation = request.form.get('department_abbreviation')
-        
-        mongo.db.departments.insert_one({
-            'department_name': department_name,
-            'department_id': department_id,
-            'department_typ': department_typ,
-            'department_abbreviation': department_abbreviation
-        })
-        
-        flash('Department added successfully!', 'success')
-        return redirect(url_for('list_departments'))
+        if create_department(department_id, department_name, department_typ, department_abbreviation):
+            flash('Department added successfully!', 'success')
+            return redirect(url_for('list_departments'))
+        else:
+            flash('Error adding department', 'danger')
     
     return render_template('add_department.html', title='Add Department')
+
+def update_department(old_department_id, new_department_name, new_department_abbreviation, new_department_typ):
+    try:
+        old_department = mongo.db.departments.find_one({'_id': ObjectId(old_department_id)})
+        if not old_department:
+            return False
+        
+        result = mongo.db.departments.update_one(
+            {'_id': ObjectId(old_department_id)},
+            {'$set': {
+                'department_name': new_department_name.strip(),
+                'department_abbreviation': new_department_abbreviation,
+                'department_typ': new_department_typ
+            }}
+        )
+        
+        if result.modified_count > 0:
+            old_queue_name = f'{old_department["department_name"].lower().replace(" ", "_")}_nurses_queue'
+            new_queue_name = f'{new_department_name.lower().replace(" ", "_")}_nurses_queue'
+            
+            if old_queue_name != new_queue_name and old_queue_name in mongo.db.list_collection_names():
+                mongo.db[old_queue_name].rename(new_queue_name)
+            return True
+        return False
+    except Exception as e:
+        print(e)
+        return False
+
 
 @app.route('/admin/edit_department/<department_id>', methods=['GET', 'POST'])
 @login_required
@@ -814,24 +900,17 @@ def edit_department(department_id):
     except InvalidId:
         flash('Invalid department ID', 'error')
         return redirect(url_for('list_departments'))
-
+    
     if request.method == 'POST':
         department_name = request.form.get('department_name')
-        new_department_id = request.form.get('department_id')
         department_abbreviation = request.form.get('department_abbreviation')
         department_typ = request.form.get('department_typ')
         
-        mongo.db.departments.update_one(
-            {'_id': ObjectId(department_id)},
-            {'$set': {
-                'department_name': department_name,
-                'department_id': new_department_id,
-                'department_abbreviation': department_abbreviation,
-                'department_typ': department_typ
-            }}
-        )
-        flash('Department updated successfully!', 'success')
-        return redirect(url_for('list_departments'))
+        if update_department(department_id, department_name, department_abbreviation, department_typ):
+            flash('Department updated successfully!', 'success')
+            return redirect(url_for('list_departments'))
+        else:
+            flash('Error updating department', 'error')
     
     return render_template('edit_department.html', title='Edit Department', department=department)
 

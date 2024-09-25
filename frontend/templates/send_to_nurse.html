@@ -39,13 +39,14 @@
                                     <select class="form-control" id="clinic" name="clinic" required>
                                         <option value="">Select a department...</option>
                                         {% for clinic in clinics %}
+                                            <!-- <option value="{{ clinic._id }}">{{ clinic.department_name }}</option> -->
                                             <option value="{{ clinic._id }}">{{ clinic.department_name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
                             </div>
                             <div class="box-footer">
-                                <button type="submit" class="btn btn-primary">Enterr</button>
+                                <button type="submit" class="btn btn-primary">Enter</button>
                             </div>
                         </form>
                     </div>

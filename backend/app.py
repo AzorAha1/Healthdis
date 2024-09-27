@@ -117,25 +117,6 @@ def login():
     
     return render_template('login.html', title='Login')
 
-# @app.route('/clinical/nurses_desk/', methods=['GET', 'POST'])
-# def nurses_desk():
-#     """nurses desk"""
-#     departments = mongo.db.departments.find()
-#     if request.method == 'POST':
-#         department_id = request.form.get('nurse_department')
-#         # find the department from the queue
-#         department = mongo.db.departments.find_one({'_id': ObjectId(department_id)})
-#         if department:
-#             department_name = department['department_name']
-#             nurses_queue_name = f"{department_name.lower().replace(' ', '_')}_nurses_queue"
-#         else:
-#             flash('Department not found', 'danger')
-#             return redirect(url_for('nurses_desk'))
-
-#         selected_department = mongo.db[nurses_queue_name].find_one_or_404({department_name: department_name})
-#         if selected_department:
-#             return redirect(url_for('nurses_desk_queue', department_name=department_name))
-#     return render_template('nurses_desk.html', title='Nurses Desk', departments=departments)
 @app.route('/clinical/nurses_desk/', methods=['GET', 'POST'])
 def nurses_desk():
     """nurses desk"""
@@ -160,16 +141,16 @@ def nurses_desk():
     return render_template('nurses_desk.html', title='Nurses Desk', departments=departments)
 
 @app.route('/clinical/doctors_dashboard')
-@role_required('doctors')
-@login_required
+# @role_required('doctors')
+# @login_required
 def doctors_dashboard():
     """this is the doctors dashboard"""
     return render_template('doctors_dashboard.html', title='Doctors Dashboard')
 @role_required()
 # Add employee route
 @app.route('/admin/add_employee', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def add_employee():
     if request.method == 'POST':
         name = request.form.get('name')
@@ -201,16 +182,16 @@ def add_employee():
 # Admin dashboard
 @app.route('/admin/')
 @app.route('/admin/dashboard')
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def admin_dashboard():
     print(session)
     email_name = session.get('email', 'Guest')
     return render_template('admin_dashboard.html', title='Admin Dashboard', email_name=email_name)
 
 @app.route('/admin/edit_user/<user_id>', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def edit_user(user_id):
     # Fetch user data from MongoDB
     user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
@@ -251,8 +232,8 @@ def edit_user(user_id):
     return render_template('edit_user.html', user=user, departments=departments)
 
 @app.route('/admin/delete_user/<user_id>')
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def delete_user(user_id):
     """Delete an EHR Fee"""
     mongo.db.users.delete_one({'_id': ObjectId(user_id)})
@@ -262,8 +243,8 @@ def delete_user(user_id):
 
 @app.route('/clinical/')
 @app.route('/clinical/dashboard')
-@login_required
-@role_required('clinical-services', 'admin-user')
+# @login_required
+# @role_required('clinical-services', 'admin-user')
 def clinical_dashboard():
     print("Dashboard Session:", session)
     current_patient = session.get('current_patient', {})
@@ -287,9 +268,10 @@ def clinical_dashboard():
                            ward_name=ward_name, 
                            services=services_list)
 
-@login_required
-@admin_or_role_required('clinical-services')
+
 @app.route('/clinical/hims_dashboard')
+# @login_required
+# @admin_or_role_required('clinical-services')
 def hims_dashboard():
     """HIMS dashboard with date filtering"""
     # Get the date filter from the query parameters, default to today
@@ -321,9 +303,10 @@ def hims_dashboard():
                            pending_queue=pending_queue, 
                            processed_queue=processed_queue,
                            current_date=filter_date.strftime('%m-%d-%Y'))
-@login_required
-@admin_or_role_required('clinical-services')
+
 @app.route('/clinical/send_to_nurse/<ehr_number>', methods=['GET', 'POST'])
+# @login_required
+# @admin_or_role_required('clinical-services')
 def send_to_nurse(ehr_number):
     patient = mongo.db.hims_queue.find_one({'ehr_number': ehr_number})
     clinics = mongo.db.departments.find({'department_typ': 'clinic'})
@@ -365,8 +348,8 @@ def send_to_nurse(ehr_number):
     
     return render_template('send_to_nurse.html', title='Send to Nurse', patient=patient, clinics=clinics)
 @app.route('/clinical/nurses_desk_queue/<department_name>')
-@login_required
-@admin_or_role_required('clinical-services')
+# @login_required
+# @admin_or_role_required('clinical-services')
 def nurses_desk_queue(department_name):
     """Display the queue for a specific department"""
     # get the date filter from te h query parameters, default to today
@@ -392,8 +375,8 @@ def nurses_desk_queue(department_name):
     processed_queue = list(mongo.db[department_name.lower().replace(' ', '_') + '_nurses_queue'].find({**date_query, 'status': {'$ne': 'Pending'}}))
     return render_template('nurses_desk_queue.html', title='Nurses Desk Queue', department_name=department_name, pending_queue=pending_queue, processed_queue=processed_queue, current_date=filter_date.strftime('%m-%d-%Y'))
 @app.route('/clinical/patient_list')
-@login_required
-@admin_or_role_required('clinical-services')
+# @login_required
+# @admin_or_role_required('clinical-services')
 def patient_list():
     """this shows the list of patients created"""
     all_patients = mongo.db.patients.find()
@@ -401,8 +384,8 @@ def patient_list():
     return render_template('patient_list.html', title='Patient List', patients=all_patients)
 
 @app.route('/clinical/update_patient/<hospital_number>', methods=['GET', 'POST'])
-@login_required
-@admin_or_role_required('clinical-services')
+# @login_required
+# @admin_or_role_required('clinical-services')
 def update_patient(hospital_number):
     patient = mongo.db.patients.find_one({'hospital_number': hospital_number})
     timenow = datetime.now()  # Get current date and time
@@ -436,8 +419,8 @@ def update_patient(hospital_number):
     return render_template('update_patient.html', patient=patient)
 
 @app.route('/clinical/search_patient', methods=['GET', 'POST'])
-@login_required
-@admin_or_role_required('clinical-services')
+# @login_required
+# @admin_or_role_required('clinical-services')
 def search_patient():
     if request.method == 'POST':
         ehr_number = request.form.get('ehr_number')
@@ -451,8 +434,8 @@ def search_patient():
     return render_template('search_patient.html')
 
 @app.route('/clinical/new_request', methods=['GET', 'POST'])
-@login_required
-@admin_or_role_required('clinical-services')
+# @login_required
+# @admin_or_role_required('clinical-services')
 def new_request():
     """Route to create a new request."""
     if request.method == 'POST':
@@ -469,8 +452,8 @@ def new_request():
     return render_template('new_request.html')
 
 @app.route('/admin/refresh_request', methods=['POST'])
-@login_required
-@admin_or_role_required('clinical-services')
+# @login_required
+# @admin_or_role_required('clinical-services')
 def refresh_request():
     # Clear the 'ward' session data
     session.pop('ward', None)
@@ -487,8 +470,8 @@ def request_dashboard():
     return render_template('request_dashboard.html', title='Request Dashboard')
 
 @app.route('/clinical/new_patient', methods=['GET', 'POST'])
-@login_required
-@admin_or_role_required('clinical-services')
+# @login_required
+# @admin_or_role_required('clinical-services')
 def new_patient():
     timenow = datetime.now()
     formatted_time = timenow.strftime('%Y-%m-%d %H:%M:%S %p')
@@ -684,8 +667,8 @@ def make_payment():
     return redirect(url_for('pos_terminal'))
 @app.route('/medpay/')
 @app.route('/medpay/dashboard')
-@login_required
-@admin_or_role_required('medpay-user')
+# @login_required
+# @admin_or_role_required('medpay-user')
 def medpay_dashboard():
     print(session)
     return render_template('medpay_dashboard.html', title='MedPay Dashboard')
@@ -714,8 +697,8 @@ def pos_terminal():
         requests = mongo.db.requests.find() 
 
     return render_template('pos_terminal.html', requests=requests, title='POS Terminal')
-@login_required
-@admin_or_role_required('clinical-services')
+# @login_required
+# @admin_or_role_required('clinical-services')
 @app.route('/clinical/follow_up', methods=['GET', 'POST'])  
 def follow_up():
     return render_template('follow_up.html', title='Follow-Up Visit')
@@ -794,8 +777,8 @@ def employee_list():
     all_employees = mongo.db.employees.find()
     return render_template('employee_list.html', title='Employee List', employees=all_employees)
 @app.route('/admin/add_ehr_fee', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def add_ehr_fee():
     departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
     if request.method == 'POST':
@@ -815,8 +798,8 @@ def add_ehr_fee():
         return redirect(url_for('manage_ehr_fees'))
     return render_template('add_ehr_fee.html', departments=departments)
 @app.route('/admin/mange_ehr_fees', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def manage_ehr_fees():
     """Display the EHR Fees table and handle adding new fees."""
     if request.method == 'POST':
@@ -840,8 +823,8 @@ def manage_ehr_fees():
 
 
 @app.route('/admin/delete_ehr_fee/<fee_id>')
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def delete_ehr_fee(fee_id):
     """Delete an EHR Fee"""
     mongo.db.ehr_fees.delete_one({'_id': ObjectId(fee_id)})
@@ -883,8 +866,8 @@ def edit_ehr_fee(fee_id):
     return render_template('edit_ehr_fees.html', title='Edit EHR Fee', fee=fee, departments=departments)
 
 @app.route('/admin/list_departments')
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def list_departments():
     """Display a list of departments"""
     departments = mongo.db.departments.find()
@@ -908,8 +891,8 @@ def create_department(department_id, department_name, department_typ, department
         return False
 
 @app.route('/admin/add_department', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def add_department():
     """Add a new department"""
     if request.method == 'POST':
@@ -954,8 +937,8 @@ def update_department(old_department_id, new_department_name, new_department_abb
 
 
 @app.route('/admin/edit_department/<department_id>', methods=['GET', 'POST'])
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def edit_department(department_id):
     """Edit an existing department"""
     try:
@@ -978,8 +961,8 @@ def edit_department(department_id):
     return render_template('edit_department.html', title='Edit Department', department=department)
 
 @app.route('/admin/delete_department/<department_id>')
-@login_required
-@role_required('admin-user')
+# @login_required
+# @role_required('admin-user')
 def delete_department(department_id):
     """Delete a department"""
     mongo.db.departments.delete_one({'_id': ObjectId(department_id)})
@@ -987,8 +970,8 @@ def delete_department(department_id):
     return redirect(url_for('list_departments'))
 
 @app.route('/clinical/ward_login', methods=['GET', 'POST'])
-@login_required
-@admin_or_role_required('clinical-services')
+# @login_required
+# @admin_or_role_required('clinical-services')
 def ward_login():
     # Fetch departments with department_typ 'ward'
     wards = mongo.db.departments.find({'department_typ': 'ward'})
@@ -1007,8 +990,8 @@ def ward_login():
     return render_template('ward_login.html', title='Ward Login', wards=wards)
 
 @app.route('/clinical/dashboard/make_request', methods=['GET', 'POST'])
-@login_required
-@admin_or_role_required('clinical-services')
+# @login_required
+# @admin_or_role_required('clinical-services')
 def in_patient_request():
     """This makes request for in-patient"""
     if request.method == 'POST':

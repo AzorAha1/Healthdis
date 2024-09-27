@@ -117,10 +117,46 @@ def login():
     
     return render_template('login.html', title='Login')
 
-@app.route('/clinical/nurses_desk/')
+# @app.route('/clinical/nurses_desk/', methods=['GET', 'POST'])
+# def nurses_desk():
+#     """nurses desk"""
+#     departments = mongo.db.departments.find()
+#     if request.method == 'POST':
+#         department_id = request.form.get('nurse_department')
+#         # find the department from the queue
+#         department = mongo.db.departments.find_one({'_id': ObjectId(department_id)})
+#         if department:
+#             department_name = department['department_name']
+#             nurses_queue_name = f"{department_name.lower().replace(' ', '_')}_nurses_queue"
+#         else:
+#             flash('Department not found', 'danger')
+#             return redirect(url_for('nurses_desk'))
+
+#         selected_department = mongo.db[nurses_queue_name].find_one_or_404({department_name: department_name})
+#         if selected_department:
+#             return redirect(url_for('nurses_desk_queue', department_name=department_name))
+#     return render_template('nurses_desk.html', title='Nurses Desk', departments=departments)
+@app.route('/clinical/nurses_desk/', methods=['GET', 'POST'])
 def nurses_desk():
     """nurses desk"""
     departments = mongo.db.departments.find()
+    if request.method == 'POST':
+        department_id = request.form.get('nurse_department')
+        try:
+            department = mongo.db.departments.find_one({'_id': ObjectId(department_id)})
+            
+            if department:
+                department_name = department['department_name']
+                # nurses_queue_name = f"{department_name.lower().replace(' ', '_')}_nurses_queue"
+                return redirect(url_for('nurses_desk_queue', department_name=department_name))
+            else:
+                flash('Department not found', 'danger')
+        except:
+            flash('Invalid department ID', 'danger')
+        
+        # If there's any error, redirect back to nurses_desk
+        return redirect(url_for('nurses_desk'))
+    
     return render_template('nurses_desk.html', title='Nurses Desk', departments=departments)
 
 @app.route('/clinical/doctors_dashboard')
@@ -328,6 +364,33 @@ def send_to_nurse(ehr_number):
             return redirect(url_for('send_to_nurse', ehr_number=ehr_number))
     
     return render_template('send_to_nurse.html', title='Send to Nurse', patient=patient, clinics=clinics)
+@app.route('/clinical/nurses_desk_queue/<department_name>')
+@login_required
+@admin_or_role_required('clinical-services')
+def nurses_desk_queue(department_name):
+    """Display the queue for a specific department"""
+    # get the date filter from te h query parameters, default to today
+    date_filter = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+
+    try:
+        filter_date = datetime.strptime(date_filter, '%Y-%m-%d')
+    except ValueError:
+        flash('Invalid date format. Showing today\'s records.', 'warning')
+        filter_date = datetime.now()
+    # set the date range from the filter (entire day)
+    start_of_day = filter_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_of_day = start_of_day + timedelta(days=1)
+    
+    # query for records with the date range
+    date_query = {
+        'registration_date': {
+            '$gte': start_of_day,
+            '$lt': end_of_day
+        }
+    }
+    pending_queue = list(mongo.db[department_name.lower().replace(' ', '_') + '_nurses_queue'].find({**date_query, 'status': 'Pending'}))
+    processed_queue = list(mongo.db[department_name.lower().replace(' ', '_') + '_nurses_queue'].find({**date_query, 'status': {'$ne': 'Pending'}}))
+    return render_template('nurses_desk_queue.html', title='Nurses Desk Queue', department_name=department_name, pending_queue=pending_queue, processed_queue=processed_queue, current_date=filter_date.strftime('%m-%d-%Y'))
 @app.route('/clinical/patient_list')
 @login_required
 @admin_or_role_required('clinical-services')

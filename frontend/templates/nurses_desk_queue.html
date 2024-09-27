@@ -1,0 +1,144 @@
+{% include 'include_clinical/header.html' %}
+{% include 'include_clinical/sidebar.html' %}
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>{{ department_name }}</h1>
+        <ol class="breadcrumb">
+            <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li class="active">Dashboard</li>
+        </ol>
+    </section>
+    
+    <section class="content">
+        <!-- Display Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <div id="flash-messages" class="alert-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Date Filter -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-default">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Date Filter</h3>
+                    </div>
+                    <div class="box-body">
+                        <form method="GET" action="{{ url_for('nurses_desk_queue', department_name=department_name) }}" class="form-inline">
+                            <div class="form-group">
+                                <label for="date">Select Date:</label>
+                                <input type="date" id="date" name="date" class="form-control" value="{{ current_date }}">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Queue -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Pending Patients - {{ current_date }}</h3>
+                    </div>
+                    <div class="box-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>EHR Number</th>
+                                    <th>Patient Name</th>
+                                    <th>Registration Time</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if pending_queue %}
+                                    {% for item in pending_queue %}
+                                        <tr>
+                                            <td>{{ item.ehr_number }}</td>
+                                            <td>{{ item.patient_name }}</td>
+                                            <td>{{ item.registration_date.strftime('%H:%M:%S') }}</td>
+                                            <td>
+                                                <a href="" class="btn btn-success btn-xs">View Patient Record</a>
+                                                <a href="" class="btn btn-warning btn-xs">Take Vitals</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No pending patients in the queue for this date.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processed Queue -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-success">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Processed Patients - {{ current_date }}</h3>
+                    </div>
+                    <div class="box-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>EHR Number</th>
+                                    <th>Patient Name</th>
+                                    <th>Registration Time</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if proccessed_queue %}
+                                    {% for item in pending_queue %}
+                                        <tr>
+                                            <td>{{ item.ehr_number }}</td>
+                                            <td>{{ item.patient_name }}</td>
+                                            <td>{{ item.registration_date.strftime('%H:%M:%S') }}</td>
+                                            <td>
+                                                <a href="" class="btn btn-success btn-xs">View Patient Record</a>
+                                                <a href="" class="btn btn-warning btn-xs">Take Vitals</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No pending patients in the queue for this date.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% include 'include_clinical/footer.html' %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const flashMessages = document.getElementById('flash-messages');
+    if (flashMessages) {
+        setTimeout(() => {
+            flashMessages.style.opacity = 0;
+            setTimeout(() => {
+                flashMessages.remove();
+            }, 500); // Match this with the CSS transition duration
+        }, 3000); // Time in milliseconds (3 seconds)
+    }
+});
+</script>

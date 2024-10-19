@@ -1,112 +1,95 @@
-{% include 'include_clinical/header.html' %}
-{% include 'include_clinical/sidebar.html' %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/bootstrap/dist/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/font-awesome/css/font-awesome.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/Ionicons/css/ionicons.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/AdminLTE.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='dist/css/skins/_all-skins.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/bootstrap-daterangepicker/daterangepicker.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/morris.js/morris.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/select2/dist/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/fullcalendar/dist/fullcalendar.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css') }}">
-
-</head>
+  {% include 'include_clinical/header.html' %}
+  {% include 'include_clinical/sidebar.html' %}
 <body>
 
 <div class="content-wrapper">
-    <section class="content-header">
-        <h1>Take Vitals</h1>
-        <ol class="breadcrumb">
-            <li><a href="{{ url_for('clinical.clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-            <li class="active">Take Vitals</li>
-        </ol>
-    </section>
+  <section class="content-header">
+    <h1>Take Vitals</h1>
+    <ol class="breadcrumb">
+      <li><a href="{{ url_for('clinical.clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+      <li class="active">Take Vitals</li>
+    </ol>
+  </section>
 
-    <section class="content">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Patient: {{ patient.patient_first_name }} (EHR: {{ patient.ehr_number }})</h3>
+  <section class="content">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="box box-primary">
+          <div class="box-header with-border">
+            <h3 class="box-title">Patient: {{ patient.patient_first_name }} (EHR: {{ patient.ehr_number }})</h3>
+          </div>
+          <form method="POST" action="{{ url_for('clinical.take_vitals', ehr_number=patient.ehr_number) }}">
+            <div class="box-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="temperature">Temperature</label>
+                    <div class="input-group">
+                      <input type="number" id="temperature" name="temperature" step="0.1" class="form-control">
+                      <div class="input-group-addon">°C</div>
                     </div>
-                    <form method="POST" action="{{ url_for('clinical.take_vitals', ehr_number=patient.ehr_number) }}">
-                        <div class="box-body">
-                            <div class="form-group">
-                                <label for="temperature">Temperature:</label>
-                                <input type="number" id="temperature" name="temperature" step="0.1" class="form-control">
-                                <select name="temperature_unit" class="form-control">
-                                    <option value="°C">°C</option>
-                                    <option value="°F">°F</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="pulse_rate">Pulse Rate (bpm):</label>
-                                <input type="number" id="pulse_rate" name="pulse_rate" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="respiratory_rate">Respiratory Rate (breaths/min):</label>
-                                <input type="number" id="respiratory_rate" name="respiratory_rate" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="blood_pressure_systolic">Blood Pressure (Systolic):</label>
-                                <input type="number" id="blood_pressure_systolic" name="blood_pressure_systolic" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="blood_pressure_diastolic">Blood Pressure (Diastolic):</label>
-                                <input type="number" id="blood_pressure_diastolic" name="blood_pressure_diastolic" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="weight">Weight:</label>
-                                <input type="number" id="weight" name="weight" step="0.1" class="form-control">
-                                <select name="weight_unit" class="form-control">
-                                    <option value="kg">kg</option>
-                                    <option value="lbs">lbs</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="height">Height:</label>
-                                <input type="number" id="height" name="height" step="0.1" class="form-control">
-                                <select name="height_unit" class="form-control">
-                                    <option value="cm">cm</option>
-                                    <option value="inches">inches</option>
-                                </select>
-                            </div>
-                            <!-- Add any other input fields as needed -->
-                        </div>
-                        <div class="box-footer">
-                            <button type="submit" class="btn btn-primary">Submit</button>
-                        </div>
-                    </form>
+                  </div>
+                  <div class="form-group">
+                    <label for="pulse_rate">Pulse Rate (bpm):</label>
+                    <input type="number" id="pulse_rate" name="pulse_rate" class="form-control">
+                  </div>
+                  <div class="form-group">
+                    <label for="respiratory_rate">Respiratory Rate (breaths/min):</label>
+                    <input type="number" id="respiratory_rate" name="respiratory_rate" class="form-control">
+                  </div>
+                  <div class="form-group">
+                    <label for="blood_pressure_systolic">Blood Pressure (Systolic):</label>
+                    <input type="number" id="blood_pressure_systolic" name="blood_pressure_systolic" class="form-control">
+                  </div>
                 </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="blood_pressure_diastolic">Blood Pressure (Diastolic):</label>
+                    <input type="number" id="blood_pressure_diastolic" name="blood_pressure_diastolic" class="form-control">
+                  </div>
+                  <div class="form-group">
+                    <label for="weight">Weight</label>
+                    <div class="input-group">
+                      <input type="number" id="weight" name="weight" step="0.1" class="form-control">
+                      <div class="input-group-addon">kg</div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="height">Height</label>
+                    <div class="input-group">
+                      <input type="number" id="height" name="height" step="0.1" class="form-control">
+                      <div class="input-group-addon">cm</div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="muac">MUAC (cm):</label>
+                    <input type="number" id="muac" name="muac" step="0.1" class="form-control">
+                  </div>
+                  <div class="form-group">
+                    <label for="additional_notes">Additional Notes:</label>
+                    <textarea id="additional_notes" name="additional_notes" class="form-control"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="box-footer">
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </div>
             </div>
+          </form>
         </div>
-    </section>
+      </div>
+    </div>
+  </section>
 </div>
 
-<!-- JS -->
-<script src="{{ url_for('static', filename='bower_components/jquery/dist/jquery.min.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/fastclick/lib/fastclick.js') }}"></script>
-<script src="{{ url_for('static', filename='dist/js/adminlte.min.js') }}"></script>
-<script src="{{ url_for('static', filename='dist/js/demo.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/moment/min/moment.min.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/bootstrap-daterangepicker/daterangepicker.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/select2/dist/js/select2.full.min.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/fullcalendar/dist/fullcalendar.min.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/datatables.net/js/jquery.dataTables.min.js') }}"></script>
-<script src="{{ url_for('static', filename='bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+{% include 'include_clinical/footer.html' %}
 
 </body>
 </html>

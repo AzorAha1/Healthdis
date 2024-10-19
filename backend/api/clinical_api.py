@@ -61,6 +61,8 @@ def nurses_desk():
             if department:
                 department_name = department['department_name']
                 # nurses_queue_name = f"{department_name.lower().replace(' ', '_')}_nurses_queue"
+                #store department name in session
+                session['department_name'] = department_name
                
                 return redirect(url_for('clinical.nurses_desk_queue', department_name=department_name))
             else:
@@ -99,11 +101,14 @@ def take_vitals():
             'weight': request.form.get('weight'),
             'height': request.form.get('height'),
             'bmi': request.form.get('bmi'),
+            'muac': request.form.get('muac'),
             'oxygen_saturation': request.form.get('oxygen_saturation'),
-            'registration_date': datetime.now()
+            'registration_date': datetime.now(),
+            'additional_notes': request.form.get('additional_notes'),
+            'nurse': session.get('email', 'Unknown')
         }
         
-        mongo.db.vitals.insert_one(vitals_data)
+        mongo.db.nurses_vitals.insert_one(vitals_data)
         
         # Flash a success message
         flash('Vitals recorded successfully', 'success')
@@ -111,7 +116,7 @@ def take_vitals():
         # Clear the session after successfully recording vitals
         session.pop('current_patient_ehr', None)
         
-        return redirect(url_for('clinical.nurses_desk_queue'))
+        return redirect(url_for('clinical.nurses_desk_queue', department_name=session.get('department_name')))
     
     return render_template('take_vitals.html', title='Take Vitals', patient=patient)
 

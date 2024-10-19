@@ -27,12 +27,12 @@
             </span>
           </a>
           <ul class="treeview-menu">
-            <li><a href="{{ url_for('hims_dashboard') }}"> </i> HIM Dashboard</a></li>
+            <li><a href="{{ url_for('clinical.hims_dashboard') }}"> </i> HIM Dashboard</a></li>
             <!-- <li><a class="popup" onclick="myFunction()"> </i> New Patient Enrolment<span class="popuptext" id="myPopup">Get full version at mayuri.infospace@gmail.com</span></a></li> -->
-            <li class="popup" id="myPopup"><a href="{{ url_for('new_patient') }}">New Patient Enrollment</a></li>
-            <li><a href="{{ url_for('search_patient') }}"> </i> Update patient Record</a></li>
-            <li><a href="{{ url_for('patient_list') }}"> </i> New Patient Registered</a></li>
-            <li><a href="{{ url_for('follow_up') }}"> </i>Follow-up Visit</a></li>
+            <li class="popup" id="myPopup"><a href="{{ url_for('clinical.new_patient') }}">New Patient Enrollment</a></li>
+            <li><a href="{{ url_for('clinical.search_patient') }}"> </i> Update patient Record</a></li>
+            <li><a href="{{ url_for('clinical.patient_list') }}"> </i> New Patient Registered</a></li>
+            <li><a href="{{ url_for('clinical.follow_up') }}"> </i>Follow-up Visit</a></li>
            </ul>
         </li>
         <li class="treeview">
@@ -44,7 +44,7 @@
           </a>
           <ul class="treeview-menu">
             <li><a class="popup" onclick="myFunction()"> Doctor Signin<span class="popuptext" id="myPopup">Get full version at mayuri.infospace@gmail.com</span></a></li>
-            <li><a href="{{ url_for('nurses_desk') }}"> </i>Nurse Desk</a></li>
+            <li><a href="{{ url_for('clinical.nurses_desk') }}"> </i>Nurse Desk</a></li>
             </ul>
         </li>
          <li class="treeview">
@@ -55,7 +55,7 @@
             </span>
           </a>
           <ul class="treeview-menu">
-            <li><a href="{{ url_for('ward_login') }}"><i class="fa fa-sign-in"></i> Wards Login</a></li> 
+            <li><a href="{{ url_for('clinical.ward_login') }}"><i class="fa fa-sign-in"></i> Wards Login</a></li> 
           </ul>
         </li>
         <li class="treeview">
@@ -66,7 +66,7 @@
             </span>
           </a>
           <ul class="treeview-menu">
-            <li><a href="{{ url_for('new_request') }}"><i class="fa fa-plus-circle"></i> New Request</a></li>
+            <li><a href="{{ url_for('clinical.new_request') }}"><i class="fa fa-plus-circle"></i> New Request</a></li>
             <li><a href="#"><i class="fa fa-edit"></i> New IGR Payment</a></li>
           </ul>
         </li>

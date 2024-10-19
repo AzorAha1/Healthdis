@@ -19,7 +19,7 @@
         <section class="content-header">
             <h1>Select the department to send patient</h1>
             <ol class="breadcrumb">
-                <li><a href="{{ url_for('clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+                <li><a href="{{ url_for('clinical.clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
                 <li class="active">Ward Login</li>
             </ol>
         </section>
@@ -31,7 +31,7 @@
                         <div class="box-header with-border">
                             <h3 class="box-title">Select Department</h3>
                         </div>
-                        <form method="POST" action="{{ url_for('send_to_nurse', ehr_number=patient.ehr_number) }}">
+                        <form method="POST" action="{{ url_for('clinical.send_to_nurse', ehr_number=patient.ehr_number) }}">
                             <div class="box-body">
                                 <h4>Patient: {{ patient.patient_name }} (EHR: {{ patient.ehr_number }})</h4>
                                 <div class="form-group">

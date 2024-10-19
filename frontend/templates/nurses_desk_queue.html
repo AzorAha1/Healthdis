@@ -22,14 +22,14 @@
         {% endwith %}
 
         <!-- Date Filter -->
-        <div class="row">
+        <!-- <div class="row">
             <div class="col-md-12">
                 <div class="box box-default">
                     <div class="box-header with-border">
                         <h3 class="box-title">Date Filter</h3>
                     </div>
                     <div class="box-body">
-                        <form method="GET" action="{{ url_for('nurses_desk_queue', department_name=department_name) }}" class="form-inline">
+                        <form method="GET" action="{{ url_for('clinical.nurses_desk_queue', department_name=department_name) }}" class="form-inline">
                             <div class="form-group">
                                 <label for="date">Select Date:</label>
                                 <input type="date" id="date" name="date" class="form-control" value="{{ current_date }}">
@@ -39,7 +39,47 @@
                     </div>
                 </div>
             </div>
+        </div> -->
+
+        <div class="box box-default">
+            <div class="box-header with-border">
+                <h3 class="box-title">Filter</h3>
+            </div>
+            <div class="box-body">
+                <form method="POST" action="{{ url_for('clinical.nurses_desk_queue', department_name=department_name) }}" class="form-inline">
+                    <div class="form-group">
+                        <label for="date">Select Date:</label>
+                        <input type="date" id="date" name="date" class="form-control" value="{{ current_date }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="ehr_number">EHR Number:</label>
+                        <input type="text" id="ehr_number" name="ehr_number" class="form-control" value="{{ ehr_number or '' }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </form>
+            </div>
         </div>
+
+        <!-- Ehr Filter -->
+        <!-- <div class="row">
+            <div class="col-md-12">
+                <div class="box box-default">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">EHR Filter</h3>
+                    </div>
+                    <div class="box-body">
+                        <form method="GET" action="{{ url_for('clinical.nurses_desk_queue', department_name=department_name) }}" class="form-inline">
+                            <div class="form-group">
+                                <label for="ehr_number">Enter EHR</label>
+                                <input type="text" id="ehr_number" name="ehr_number" class="form-control" value="">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div> -->
+
 
         <!-- Pending Queue -->
         <div class="row">
@@ -66,8 +106,16 @@
                                             <td>{{ item.patient_name }}</td>
                                             <td>{{ item.registration_date.strftime('%H:%M:%S') }}</td>
                                             <td>
-                                                <a href="" class="btn btn-success btn-xs">View Patient Record</a>
-                                                <a href="" class="btn btn-warning btn-xs">Take Vitals</a>
+                                                <form action="{{ url_for('clinical.set_current_patient') }}" method="POST" style="display: inline;">
+                                                    <input type="hidden" name="ehr_number" value="{{ item.ehr_number }}">
+                                                    <input type="hidden" name="action" value="view_record">
+                                                    <button type="submit" class="btn btn-success btn-xs">View Patient Record</button>
+                                                </form>
+                                                <form action="{{ url_for('clinical.set_current_patient') }}" method="POST" style="display: inline;">
+                                                    <input type="hidden" name="ehr_number" value="{{ item.ehr_number }}">
+                                                    <input type="hidden" name="action" value="take_vitals">
+                                                    <button type="submit" class="btn btn-warning btn-xs">Take Vitals</button>
+                                                </form>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -102,21 +150,22 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% if proccessed_queue %}
-                                    {% for item in pending_queue %}
+                                {% if processed_queue %}
+                                    {% for item in processed_queue %}
                                         <tr>
                                             <td>{{ item.ehr_number }}</td>
                                             <td>{{ item.patient_name }}</td>
                                             <td>{{ item.registration_date.strftime('%H:%M:%S') }}</td>
+                                            <td>{{ item.status }}</td>
                                             <td>
                                                 <a href="" class="btn btn-success btn-xs">View Patient Record</a>
-                                                <a href="" class="btn btn-warning btn-xs">Take Vitals</a>
+                                                <a href="" class="btn btn-warning btn-xs">Update Vitals</a>
                                             </td>
                                         </tr>
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="5" class="text-center">No pending patients in the queue for this date.</td>
+                                        <td colspan="5" class="text-center">No processed patients in the queue for this date.</td>
                                     </tr>
                                 {% endif %}
                             </tbody>

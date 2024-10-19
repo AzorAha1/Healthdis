@@ -7,7 +7,7 @@
         
         <ul class="treeview-menu">
           <li>
-            <a href="{{ url_for('add_user') }}">
+            <a href="{{ url_for('admin.add_user') }}">
                 <i class="fa fa-users"></i> <span>Manage Users</span>
             </a>
         </li>
@@ -20,27 +20,27 @@
               </a>
           </li>
           <li>
-            <a href="{{ url_for('manage_ehr_fees') }}">
+            <a href="{{ url_for('admin.manage_ehr_fees') }}">
               <i class="fa fa-money"></i> <span>Manage EHR Fees</span>
             </a>
           </li>
           <li>
-              <a href="{{ url_for('add_user') }}">
+              <a href="{{ url_for('admin.add_user') }}">
                   <i class="fa fa-user"></i> <span>Add User</span>
               </a>
           </li>
           <li>
-              <a href="{{ url_for('user_list') }}">
+              <a href="{{ url_for('admin.user_list') }}">
                   <i class="fa fa-users"></i> <span>List of Users</span> 
               </a>
           </li>
           <li>
-            <a href="{{ url_for('add_department') }}">
+            <a href="{{ url_for('admin.add_department') }}">
                 <i class="fa fa-building"></i> <span>Add Department</span>
             </a>
         </li>
         <li>
-          <a href="{{ url_for('list_departments') }}">
+          <a href="{{ url_for('admin.list_departments') }}">
               <i class="fa fa-building"></i> <span>Department List</span>
           </a>
       </li>

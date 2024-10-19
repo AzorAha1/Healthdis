@@ -5,7 +5,7 @@
     <section class="content-header">
         <h1>New User Enrollment</h1>
         <ol class="breadcrumb">
-            <li><a href="{{ url_for('admin_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="{{ url_for('admin.admin_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
             <li class="active">New User Enrollment</li>
         </ol>
     </section>
@@ -18,7 +18,7 @@
                         <h3 class="box-title">Enter User Information</h3>
                     </div>
                     <!-- /.box-header -->
-                    <form method="POST" action="{{ url_for('add_user') }}">
+                    <form method="POST" action="{{ url_for('admin.add_user') }}">
                         <div class="form-group">
                             <label for="firstname">First Name:</label>
                             <input type="text" class="form-control" id="firstname" name="firstname" required>

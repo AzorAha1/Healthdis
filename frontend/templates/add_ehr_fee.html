@@ -5,8 +5,8 @@
     <section class="content-header">
         <h1>Add New EHR Fee</h1>
         <ol class="breadcrumb">
-            <li><a href="{{ url_for('admin_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-            <li><a href="{{ url_for('manage_ehr_fees') }}">Manage EHR Fees</a></li>
+            <li><a href="{{ url_for('admin.admin_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="{{ url_for('admin.manage_ehr_fees') }}">Manage EHR Fees</a></li>
             <li class="active">Add EHR Fee</li>
         </ol>
     </section>
@@ -19,7 +19,7 @@
                         <h3 class="box-title">Enter EHR Fee Information</h3>
                     </div>
                     <!-- /.box-header -->
-                    <form method="POST" action="{{ url_for('add_ehr_fee') }}">
+                    <form method="POST" action="{{ url_for('admin.add_ehr_fee') }}">
                         <!-- Department Dropdown -->
                         <div class="form-group">
                             <label for="department_name">Department:</label>

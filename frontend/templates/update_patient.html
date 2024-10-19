@@ -5,8 +5,8 @@
     <section class="content-header">
         <h1>Update Patient Record</h1>
         <ol class="breadcrumb">
-            <li><a href="{{ url_for('clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-            <li><a href="{{ url_for('patient_list') }}">Patient List</a></li>
+            <li><a href="{{ url_for('clinical.clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="{{ url_for('clinical.patient_list') }}">Patient List</a></li>
             <li class="active">Update Patient Record</li>
         </ol>
     </section>
@@ -19,7 +19,7 @@
                         <h3 class="box-title">Edit Patient Information</h3>
                     </div>
                     <!-- /.box-header -->
-                    <form method="POST" action="{{ url_for('update_patient', hospital_number=patient['hospital_number']) }}">
+                    <form method="POST" action="{{ url_for('clinical.update_patient', hospital_number=patient['hospital_number']) }}">
                         <div class="box-body">
                             <!-- Row 1: First name, Middle name, Surname -->
                             <div class="row">

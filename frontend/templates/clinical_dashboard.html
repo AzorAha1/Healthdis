@@ -61,7 +61,7 @@
                         <h3 class="box-title">Select Request</h3>
                     </div>
                     <div class="box-body">
-                        <form method="POST" action="{{ url_for('in_patient_request') }}">
+                        <form method="POST" action="{{ url_for('clinical.in_patient_request') }}">
                             <div class="form-group">
                                 <label for="info_dropdown">Select Request:</label>
                                 <select class="form-control" id="info_dropdown" name="selected_service">
@@ -82,11 +82,11 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <!-- Form to refresh the page -->
-                                    <form method="POST" action="{{ url_for('refresh_request') }}" style="display: inline;">
+                                    <form method="POST" action="{{ url_for('admin.refresh_request') }}" style="display: inline;">
                                         <button type="submit" class="btn btn-success">Refresh Request</button>
                                     </form>
                                     <!-- Form to request a new ward -->
-                                    <form method="POST" action="{{ url_for('in_patient_request') }}" style="display: inline; margin-left: 10px;">
+                                    <form method="POST" action="{{ url_for('clinical.in_patient_request') }}" style="display: inline; margin-left: 10px;">
                                         <input type="hidden" id="selected_service" name="selected_service" value="">
                                         <button type="submit" class="btn btn-danger">Make Request</button>
                                     </form>

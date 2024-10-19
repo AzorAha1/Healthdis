@@ -6,7 +6,7 @@
     <section class="content-header">
         <h1>Nurse Login</h1>
         <ol class="breadcrumb">
-            <li><a href="{{ url_for('clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="{{ url_for('clinical.clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
             
         </ol>
     </section>
@@ -18,7 +18,7 @@
                     <div class="box-header with-border">
                         <h3 class="box-title">Select the Department you Work at</h3>
                     </div>
-                    <form method="POST" action="{{ url_for('nurses_desk') }}">
+                    <form method="POST" action="{{ url_for('clinical.nurses_desk') }}">
                         <div class="box-body">
                             <div class="form-group">
                                 <label for="ward">Select Department</label>

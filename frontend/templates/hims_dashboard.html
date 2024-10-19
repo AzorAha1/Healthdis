@@ -29,7 +29,7 @@
                         <h3 class="box-title">Date Filter</h3>
                     </div>
                     <div class="box-body">
-                        <form method="GET" action="{{ url_for('hims_dashboard') }}" class="form-inline">
+                        <form method="GET" action="{{ url_for('clinical.hims_dashboard') }}" class="form-inline">
                             <div class="form-group">
                                 <label for="date">Select Date:</label>
                                 <input type="date" id="date" name="date" class="form-control" value="{{ current_date }}">
@@ -65,7 +65,7 @@
                                         <td>{{ item.patient_name }}</td>
                                         <td>{{ item.registration_date.strftime('%H:%M:%S') }}</td>
                                         <td>
-                                            <a href="{{ url_for('send_to_nurse', ehr_number=item.ehr_number) }}" class="btn btn-warning btn-xs">Send to Nurse</a>
+                                            <a href="{{ url_for('clinical.send_to_nurse', ehr_number=item.ehr_number) }}" class="btn btn-warning btn-xs">Send to Nurse</a>
                                         </td>
                                     </tr>
                                 {% else %}

@@ -1,3 +1,4 @@
+apispec==6.6.1
 bcrypt==4.2.0
 blinker==1.8.2
 click==8.1.7
@@ -5,11 +6,13 @@ dnspython==2.6.1
 Flask==3.0.3
 Flask-Bcrypt==1.0.1
 Flask-PyMongo==2.3.0
+flask-smorest==0.44.0
 Flask-SQLAlchemy==3.1.1
 gunicorn==23.0.0
 itsdangerous==2.2.0
 Jinja2==3.1.4
 MarkupSafe==2.1.5
+marshmallow==3.22.0
 mysqlclient==2.2.4
 packaging==24.1
 pymongo==4.8.0
@@ -17,4 +20,5 @@ python-dateutil==2.9.0.post0
 six==1.16.0
 SQLAlchemy==2.0.34
 typing_extensions==4.12.2
+webargs==8.6.0
 Werkzeug==3.0.4

@@ -7,7 +7,7 @@
             Search Patient For New Request
         </h1>
         <ol class="breadcrumb">
-            <li><a href="{{ url_for('clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li><a href="{{ url_for('clinical.clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
             <li class="active">Search Patient</li>
         </ol>
     </section>
@@ -30,7 +30,7 @@
                         {% endif %}
                     {% endwith %}
 
-                    <form method="POST" action="{{ url_for('new_request') }}">
+                    <form method="POST" action="{{ url_for('clinical.new_request') }}">
                         <div class="box-body">
                             <div class="form-group">
                                 <label for="ehr_number">EHR Number</label>

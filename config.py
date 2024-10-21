@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from flask_pymongo import PyMongo
 
 
 

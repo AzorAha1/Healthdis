@@ -132,10 +132,11 @@ def make_payment():
             return render_template('make_payment.html', userinfos=request_details, payments=payments, title='Payment Successful')
         except Exception as e:
             flash(f'Error processing payment: {str(e)}', 'error')
+            print(f'Error processing for {str(e)}')
             return redirect(url_for('medpay.pos_terminal'))
     
     # Handle GET requests
-    return redirect(url_for('pos_terminal'))
+    return redirect(url_for('medpay.pos_terminal'))
 
 @medpay_bp.route('/pos_terminal/', methods=['GET', 'POST'])
 @login_required

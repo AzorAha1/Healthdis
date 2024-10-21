@@ -23,11 +23,11 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Staff ID</th>
                     <th>Full Name</th>
                     <th>Phone Number</th>
-                    <th>IPPIS NO</th>
                     <th>Email</th>
+                    <th>IPPIS NO</th>
+                    <th>Department</th>
                     <th>Rank</th>
                     <th>Username</th>
                     <th>Actions</th>
@@ -38,8 +38,8 @@
                     <tr>
                         <td>{{ loop.index }}</td> 
                         <td>{{ user.firstname }} {{ user.middlename }} {{ user.lastname }}</td>
-                        <td>{{ user.email }}</td>
                         <td>{{ user.phonenumber }}</td>
+                        <td>{{ user.email }}</td>
                         <td>{{ user.ippisno }}</td>
                         <td>{{ user.department }}</td>
                         <td>{{ user.rank }}</td>

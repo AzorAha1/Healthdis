@@ -2,7 +2,7 @@ import uuid
 import json
 from bson import ObjectId
 from bson.errors import InvalidId
-from flask import Flask, flash, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session
 from backend.auth.decorator import login_required, role_required
 from backend.extensions import mongo
 from functools import wraps

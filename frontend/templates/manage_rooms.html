@@ -1,0 +1,49 @@
+{% include 'include_admin/header.html' %}
+{% include 'include_admin/sidebar.html' %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>Manage Rooms</h1>
+        <ol class="breadcrumb">
+            <li><a href="{{ url_for('admin.admin_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li class="active">Manage Rooms</li>
+        </ol>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Add New Room</h3>
+                    </div>
+                    <form method="POST" action="{{ url_for('admin.manage_rooms') }}">
+                        <div class="form-group">
+                            <label for="room_number">Room Number:</label>
+                            <input type="text" class="form-control" id="room_number" name="room_number" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="department">Department:</label>
+                            <select class="form-control" id="department" name="department">
+                                <option value="" disabled selected>Select a department</option>
+                                {% for department in departments %}
+                                    <option value="{{ department.department_name }}">{{ department.department_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="capacity">Room Capacity:</label>
+                            <input type="number" class="form-control" id="room_capacity" name="room_capacity" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Add Room</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+{% include 'include_admin/footer.html' %}

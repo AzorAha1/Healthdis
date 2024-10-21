@@ -32,51 +32,70 @@
                   <div class="form-group">
                     <label for="temperature">Temperature</label>
                     <div class="input-group">
-                      <input type="number" id="temperature" name="temperature" step="0.1" class="form-control">
+                      <input type="number" id="temperature" name="temperature" step="0.1" class="form-control" required>
                       <div class="input-group-addon">°C</div>
                     </div>
                   </div>
                   <div class="form-group">
                     <label for="pulse_rate">Pulse Rate (bpm):</label>
-                    <input type="number" id="pulse_rate" name="pulse_rate" class="form-control">
+                    <input type="number" id="pulse_rate" name="pulse_rate" class="form-control" required>
                   </div>
                   <div class="form-group">
                     <label for="respiratory_rate">Respiratory Rate (breaths/min):</label>
-                    <input type="number" id="respiratory_rate" name="respiratory_rate" class="form-control">
+                    <input type="number" id="respiratory_rate" name="respiratory_rate" class="form-control" required>
                   </div>
                   <div class="form-group">
                     <label for="blood_pressure_systolic">Blood Pressure (Systolic):</label>
-                    <input type="number" id="blood_pressure_systolic" name="blood_pressure_systolic" class="form-control">
+                    <input type="number" id="blood_pressure_systolic" name="blood_pressure_systolic" class="form-control" required>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label for="blood_pressure_diastolic">Blood Pressure (Diastolic):</label>
-                    <input type="number" id="blood_pressure_diastolic" name="blood_pressure_diastolic" class="form-control">
+                    <label for="blood_pressure_diastolic">Blood Pressure (Diastolic):</label required>
+                    <input type="number" id="blood_pressure_diastolic" name="blood_pressure_diastolic" class="form-control" required>
                   </div>
                   <div class="form-group">
                     <label for="weight">Weight</label>
                     <div class="input-group">
-                      <input type="number" id="weight" name="weight" step="0.1" class="form-control">
+                      <input type="number" id="weight" name="weight" step="0.1" class="form-control" required>
                       <div class="input-group-addon">kg</div>
                     </div>
                   </div>
                   <div class="form-group">
                     <label for="height">Height</label>
                     <div class="input-group">
-                      <input type="number" id="height" name="height" step="0.1" class="form-control">
+                      <input type="number" id="height" name="height" step="0.1" class="form-control" required>
                       <div class="input-group-addon">cm</div>
                     </div>
                   </div>
                   <div class="form-group">
                     <label for="muac">MUAC (cm):</label>
-                    <input type="number" id="muac" name="muac" step="0.1" class="form-control">
+                    <input type="number" id="muac" name="muac" step="0.1" class="form-control" required>
                   </div>
                   <div class="form-group">
                     <label for="additional_notes">Additional Notes:</label>
-                    <textarea id="additional_notes" name="additional_notes" class="form-control"></textarea>
+                    <textarea id="additional_notes" name="additional_notes" class="form-control" required></textarea>
                   </div>
                 </div>
+
+                <!-- This is the Room Patient will be sent -->
+                <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="room_number">Select Room to Send Patient</label>
+                      <select id="room_number" name="room_number" class="form-control">
+                        <option value="1">Room 1</option>
+                        <option value="2">Room 2</option>
+                        <option value="3">Room 3</option>
+                        <option value="4">Room 4</option>
+                        <option value="5">Room 5</option>
+                        <option value="6">Room 6</option>
+                        <option value="7">Room 7</option>
+                        <option value="8">Room 8</option>
+                        <option value="9">Room 9</option>
+                        <option value="10">Room 10</option>
+                      </select>
+                    </div>
+                  </div>
               </div>
               <div class="box-footer">
                 <button type="submit" class="btn btn-primary">Submit</button>

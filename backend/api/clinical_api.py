@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import json
 import uuid
+import bson
 from flask import request
 from flask_smorest import Blueprint
 from marshmallow import fields, Schema
@@ -67,7 +68,7 @@ def nurses_desk():
                 return redirect(url_for('clinical.nurses_desk_queue', department_name=department_name))
             else:
                 flash('Department not found', 'danger')
-        except:
+        except bson.errors.InvalidId:
             flash('Invalid department ID', 'danger')
         
         # If there's any error, redirect back to nurses_desk
@@ -175,22 +176,21 @@ def hims_dashboard():
 # @login_required
 # @admin_or_role_required('clinical-services')
 def send_to_nurse(ehr_number):
+    """send to nurse function"""
     patient = mongo.db.hims_queue.find_one({'ehr_number': ehr_number})
     clinics = mongo.db.departments.find({'department_typ': 'clinic'})
-    
     if not patient:
         flash('Patient not found in the HIMS queue', 'danger')
         return redirect(url_for('hims_dashboard'))
-    
     if request.method == 'POST':
         selected_clinic_id = request.form.get('clinic')
         if selected_clinic_id:
             # Update patient's status or move them to the selected clinic
             try:
                 selected_clinic_id = ObjectId(selected_clinic_id)
-            except Exception:
+            except bson.errors.InvalidId:
                 flash('Invalid clinic ID', 'warning')
-                return redirect(url_for('send_to_nurse', ehr_number=ehr_number))
+                return redirect(url_for('clinical.send_to_nurse', ehr_number=ehr_number))
             selected_clinic = mongo.db.departments.find_one({'_id': selected_clinic_id})
             if selected_clinic:
                 mongo.db.hims_queue.update_one(
@@ -211,7 +211,7 @@ def send_to_nurse(ehr_number):
                 return redirect(url_for('clinical.hims_dashboard'))
         else:
             flash('Please select a clinic', 'warning')
-            return redirect(url_for('send_to_nurse', ehr_number=ehr_number))
+            return redirect(url_for('clinical.send_to_nurse', ehr_number=ehr_number))
     
     return render_template('send_to_nurse.html', title='Send to Nurse', patient=patient, clinics=clinics)
 # @clinical_bp.route('/nurses_desk_queue/<department_name>')

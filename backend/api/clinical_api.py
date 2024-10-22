@@ -4,11 +4,12 @@ import uuid
 import bson
 from flask import request
 from flask_smorest import Blueprint
-from marshmallow import fields, Schema
-from backend.helperfuncs.helperfuncs import get_registration_fee
-from backend.extensions import mongo
-from flask import flash, render_template, request, redirect, url_for, session
 from bson import ObjectId
+from marshmallow import fields, Schema
+from backend.extensions import mongo
+from backend.helperfuncs.helperfuncs import get_registration_fee
+from flask import flash, render_template, redirect, url_for, session
+
 
 class ClinicalSchema(Schema):
     pass
@@ -76,51 +77,56 @@ def nurses_desk():
     
     return render_template('nurses_desk.html', title='Nurses Desk', departments=departments)
 
+
 @clinical_bp.route('/take_vitals/', methods=['GET', 'POST'])
-# @login_required
-# @admin_or_role_required('clinical-services')
 def take_vitals():
     """Take vitals for a patient"""
+    #show correct session
+    print(f'Current Session is {session}')
     ehr_number = session.get('current_patient_ehr')
     if not ehr_number:
         flash('No patient selected', 'error')
         return redirect(url_for('clinical.nurses_desk_queue'))
-    
+
     patient = mongo.db.patients.find_one({'ehr_number': ehr_number})
     if not patient:
         flash('Patient not found', 'error')
         return redirect(url_for('clinical.nurses_desk_queue'))
+
+    # Get the department name from the session
+    department_name = session.get('department_name')
     
+    # Fetch rooms for this department
+    department_rooms = list(mongo.db.rooms.find({'room_type': department_name}))
+
     if request.method == 'POST':
         # Get the vitals data from the form
         vitals_data = {
-            'ehr_number': ehr_number,  # Use the ehr_number from the session
+            'ehr_number': ehr_number,
             'temperature': request.form.get('temperature'),
             'pulse_rate': request.form.get('pulse_rate'),
             'respiratory_rate': request.form.get('respiratory_rate'),
-            'blood_pressure': request.form.get('blood_pressure'),
+            'blood_pressure_systolic': request.form.get('blood_pressure_systolic'),
+            'blood_pressure_diastolic': request.form.get('blood_pressure_diastolic'),
             'weight': request.form.get('weight'),
             'height': request.form.get('height'),
-            'bmi': request.form.get('bmi'),
             'muac': request.form.get('muac'),
-            'oxygen_saturation': request.form.get('oxygen_saturation'),
             'registration_date': datetime.now(),
             'additional_notes': request.form.get('additional_notes'),
+            'room_number': request.form.get('room_number'),
+            'department': department_name,
             'nurse': session.get('email', 'Unknown')
         }
         
         mongo.db.nurses_vitals.insert_one(vitals_data)
-        
-        # Flash a success message
         flash('Vitals recorded successfully', 'success')
-        
-        # Clear the session after successfully recording vitals
         session.pop('current_patient_ehr', None)
-        
-        return redirect(url_for('clinical.nurses_desk_queue', department_name=session.get('department_name')))
-    
-    return render_template('take_vitals.html', title='Take Vitals', patient=patient)
+        return redirect(url_for('clinical.nurses_desk_queue', department_name=department_name))
 
+    return render_template('take_vitals.html', 
+                         title='Take Vitals', 
+                         patient=patient, 
+                         department_rooms=department_rooms, department_name=department_name)
 @clinical_bp.route('/set_current_patient', methods=['POST'])
 # @login_required
 # @admin_or_role_required('clinical-services')

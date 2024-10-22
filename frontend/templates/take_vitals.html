@@ -7,8 +7,67 @@
 
   {% include 'include_clinical/header.html' %}
   {% include 'include_clinical/sidebar.html' %}
-<body>
 
+  <!-- Add a modern font -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Custom CSS for cleaner design -->
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+    .form-group label {
+      font-weight: 500;
+    }
+    .form-control {
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 12px;
+    }
+    .input-group-addon {
+      background-color: #f1f1f1;
+      border-radius: 0 8px 8px 0;
+    }
+    .box {
+      border-radius: 10px;
+      border: none;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .box-header {
+      background-color: #007bff;
+      color: white;
+      border-radius: 10px 10px 0 0;
+      padding: 15px;
+    }
+    .box-title {
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+    }
+    .breadcrumb {
+      background: none;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+    .content-wrapper {
+      padding: 20px;
+    }
+    .box-footer {
+      text-align: right;
+      padding-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
 <div class="content-wrapper">
   <section class="content-header">
     <h1>Take Vitals</h1>
@@ -20,7 +79,7 @@
 
   <section class="content">
     <div class="row">
-      <div class="col-md-6">
+      <div class="col-md-8 mx-auto">
         <div class="box box-primary">
           <div class="box-header with-border">
             <h3 class="box-title">Patient: {{ patient.patient_first_name }} (EHR: {{ patient.ehr_number }})</h3>
@@ -28,6 +87,7 @@
           <form method="POST" action="{{ url_for('clinical.take_vitals', ehr_number=patient.ehr_number) }}">
             <div class="box-body">
               <div class="row">
+                <!-- First column: Vital inputs -->
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="temperature">Temperature</label>
@@ -49,9 +109,11 @@
                     <input type="number" id="blood_pressure_systolic" name="blood_pressure_systolic" class="form-control" required>
                   </div>
                 </div>
+
+                <!-- Second column: Additional vital inputs -->
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label for="blood_pressure_diastolic">Blood Pressure (Diastolic):</label required>
+                    <label for="blood_pressure_diastolic">Blood Pressure (Diastolic):</label>
                     <input type="number" id="blood_pressure_diastolic" name="blood_pressure_diastolic" class="form-control" required>
                   </div>
                   <div class="form-group">
@@ -72,33 +134,30 @@
                     <label for="muac">MUAC (cm):</label>
                     <input type="number" id="muac" name="muac" step="0.1" class="form-control" required>
                   </div>
+                </div>
+
+                <!-- Room selection -->
+                <div class="col-md-12">
+                  <div class="form-group">
+                      <label for="room_number">Assign Patient to Room in {{ department_name }}</label>
+                      <select id="room_number" name="room_number" class="form-control" required>
+                          <option value="">Select a room</option>
+                          {% for room in department_rooms %}
+                              <option value="{{ room.room_number }}">
+                                  Room {{ room.room_number }} (Capacity: {{ room.room_capacity }})
+                              </option>
+                          {% endfor %}
+                      </select>
+                  </div>
                   <div class="form-group">
                     <label for="additional_notes">Additional Notes:</label>
                     <textarea id="additional_notes" name="additional_notes" class="form-control" required></textarea>
                   </div>
                 </div>
-
-                <!-- This is the Room Patient will be sent -->
-                <div class="col-md-6">
-                    <div class="form-group">
-                      <label for="room_number">Select Room to Send Patient</label>
-                      <select id="room_number" name="room_number" class="form-control">
-                        <option value="1">Room 1</option>
-                        <option value="2">Room 2</option>
-                        <option value="3">Room 3</option>
-                        <option value="4">Room 4</option>
-                        <option value="5">Room 5</option>
-                        <option value="6">Room 6</option>
-                        <option value="7">Room 7</option>
-                        <option value="8">Room 8</option>
-                        <option value="9">Room 9</option>
-                        <option value="10">Room 10</option>
-                      </select>
-                    </div>
-                  </div>
               </div>
+
               <div class="box-footer">
-                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="submit" class="btn btn-primary">Send to Docter</button>
               </div>
             </div>
           </form>

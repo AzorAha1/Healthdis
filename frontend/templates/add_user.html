@@ -64,33 +64,58 @@
                                 <option value="clinical-services">Clinical Services</option>
                             </select>
                         </div>
+
+                        <!-- Clinical Role Fields (Visible only for Clinical Services) -->
                         <div id="clinical-role-fields" style="display: none;">
                             <div class="form-group">
-                                <label>What are you below:</label><br>
+                                <label>Clinical Role:</label><br>
                                 <label><input type="radio" name="clinical_role" value="doctor"> Doctor</label><br>
                                 <label><input type="radio" name="clinical_role" value="nurse"> Nurse</label><br>
                                 <label><input type="radio" name="clinical_role" value="pharmacist"> Pharmacist</label><br>
-                                <label><input type="radio" name="clinical_role" value="radiographer">Radiographer</label><br>
-                                <label><input type="radio" name="clinical_role" value="other"> Other</label><br>
+                                <label><input type="radio" name="clinical_role" value="radiographer"> Radiographer</label><br>
+                                <label><input type="radio" name="clinical_role" value="other"> Other</label>
                             </div>
                             <div class="form-group">
                                 <label for="position">Position:</label>
                                 <input type="text" class="form-control" id="position" name="position">
                             </div>
+
+                            <!-- Department Selection (Visible only for Clinical Services) -->
+                            <div class="form-group" id="department-selection">
+                                <label>Select Departments:</label>
+                                <div class="department-list">
+                                    {% for department in departments %}
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" name="assigned_departments" value="{{ department.department_name }}">
+                                            {{ department.department_name }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                
+                            </div>
                         </div>
-                        <div class="form-group"></div>
-                            <label for="department">Department:</label>
-                            <select class="form-control" id="department" name="department">
-                                <option value="">---Select---</option>
-                                {% for department in departments %}
-                                    <option value="{{ department.department_name }}">{{ department.department_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+
                         <div class="form-group">
                             <label for="phonenumber">Phone Number:</label>
                             <input type="text" class="form-control" id="phonenumber" name="phonenumber" required>
                         </div>
+                        <div class="form-group">
+                            <label for="primary_department">Primary Department:</label>
+                            <select class="form-control" id="department" name="department">
+                                <option value="" disabled selected>Select a department</option>
+                                {% if departments %}
+                                    {% for department in departments %}
+                                        <option value="{{ department.department_name }}">{{ department.department_name }}</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="" disabled>No departments available</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        
                         <div class="form-group">
                             <label for="ehr_number">EHR Number:</label>
                             <input type="text" class="form-control" id="ehr_number" name="ehr_number">
@@ -98,13 +123,9 @@
                         <button type="submit" class="btn btn-primary">Add User</button>
                     </form>
                 </div>
-                <!-- /.box -->
             </div>
-            <!-- /.col -->
         </div>
-        <!-- /.row -->
     </section>
-    <!-- /.content -->
 </div>
 
 {% include 'include_admin/footer.html' %}
@@ -113,11 +134,15 @@
     function toggleClinicalRoleFields() {
         var role = document.getElementById('role').value;
         var clinicalRoleFields = document.getElementById('clinical-role-fields');
-
+        var departmentSelection = document.getElementById('department-selection');
+        
+        // Show/Hide fields based on role
         if (role === 'clinical-services') {
             clinicalRoleFields.style.display = 'block';
+            departmentSelection.style.display = 'block';  // Show department selection for clinical staff
         } else {
             clinicalRoleFields.style.display = 'none';
+            departmentSelection.style.display = 'none';  // Hide department selection for non-clinical staff
         }
     }
 </script>

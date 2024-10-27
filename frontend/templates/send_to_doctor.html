@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send to Doctor - {{ patient.patient_first_name }}</title>
+    
+    {% include 'include_clinical/header.html' %}
+    {% include 'include_clinical/sidebar.html' %}
+    
+    <style>
+        .vitals-summary {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .vital-item {
+            margin-bottom: 10px;
+        }
+        .vital-label {
+            font-weight: 500;
+            color: #666;
+        }
+        .confirmation-box {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="content-wrapper">
+        <section class="content-header">
+            <h1>Send to Doctor</h1>
+            <ol class="breadcrumb">
+                <li><a href="{{ url_for('clinical.clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
+                <li><a href="{{ url_for('clinical.nurses_desk_queue') }}">Nurses Queue</a></li>
+                <li class="active">Send to Doctor</li>
+            </ol>
+        </section>
+
+        <section class="content">
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                    <div class="alert-container">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <h3 class="box-title">Confirm Patient Transfer to Doctor</h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="confirmation-box">
+                                <h4>Patient Details</h4>
+                                <p>Name: {{ patient.patient_first_name }} {{ patient.patient_last_name }}</p>
+                                <p>EHR: {{ patient.ehr_number }}</p>
+                                <p>Department: {{ department }}</p>
+                                <p>Room: {{ vitals.room_number }}</p>
+                            </div>
+
+                            <div class="vitals-summary">
+                                <h4>Vitals Summary</h4>
+                                <div class="vital-item">
+                                    <span class="vital-label">Temperature:</span> 
+                                    {{ vitals.temperature }}°C
+                                </div>
+                                <div class="vital-item">
+                                    <span class="vital-label">Blood Pressure:</span>
+                                    {{ vitals.blood_pressure_systolic }}/{{ vitals.blood_pressure_diastolic }} mmHg
+                                </div>
+                                <div class="vital-item">
+                                    <span class="vital-label">Pulse Rate:</span>
+                                    {{ vitals.pulse_rate }} bpm
+                                </div>
+                                <div class="vital-item">
+                                    <span class="vital-label">Additional Notes:</span>
+                                    {{ vitals.additional_notes }}
+                                </div>
+                            </div>
+
+                            <form method="POST" action="{{ url_for('clinical.send_to_doctor') }}">
+                                <div class="box-footer text-center">
+                                    <button type="button" class="btn btn-default" onclick="window.history.back();">
+                                        <i class="fa fa-arrow-left"></i> Back
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa fa-check"></i> Confirm Send to Doctor
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    {% include 'include_clinical/footer.html' %}
+</body>
+</html>

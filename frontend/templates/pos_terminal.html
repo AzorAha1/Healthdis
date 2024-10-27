@@ -23,6 +23,18 @@
     </style>
 </head>
 <body>
+    <!-- Display Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        <div id="flash-messages" class="alert-container">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
     <div class="split-screen">
         <div class="left-side">
             <h2 class="mb-4">POS Terminal</h2>

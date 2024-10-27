@@ -1,16 +1,12 @@
 {% include 'include_clinical/header.html' %}
 {% include 'include_clinical/sidebar.html' %}
-
 <div class="content-wrapper">
-
     <section class="content-header">
         <h1>Nurse Login</h1>
         <ol class="breadcrumb">
             <li><a href="{{ url_for('clinical.clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-            
         </ol>
     </section>
-
     <section class="content">
         <div class="row">
             <div class="col-md-6">
@@ -18,27 +14,102 @@
                     <div class="box-header with-border">
                         <h3 class="box-title">Select the Department you Work at</h3>
                     </div>
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible">
+                                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
                     <form method="POST" action="{{ url_for('clinical.nurses_desk') }}">
                         <div class="box-body">
                             <div class="form-group">
                                 <label for="ward">Select Department</label>
                                 <select class="form-control" id="ward" name="nurse_department" required>
                                     <option value="">--Select Department--</option>
-                                    {% for department in departments %}
-                                        <option value="{{ department._id }}">{{ department.department_name }}</option>
-                                    {% endfor %}
+                                    {% if departments %}
+                                        {% for department in departments %}
+                                            <option value="{{ department._id }}"
+                                                {% if current_user and current_user.department == department.department_name %}
+                                                    style="color: #3c8dbc; font-weight: bold;"
+                                                {% endif %}>
+                                                {{ department.department_name }}
+                                                {% if current_user and current_user.department == department.department_name %}
+                                                    (Primary Department)
+                                                {% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option value="" disabled>No departments available for you</option>
+                                    {% endif %}
                                 </select>
+                                {% if current_user and current_user.role != 'admin-user' %}
+                                    <small class="text-muted">
+                                        Note: You can only select departments you are assigned to.
+                                    </small>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="box-footer">
-                            <button type="submit" class="btn btn-primary">Login</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-sign-in"></i> Login
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
+            
+            <!-- Information Box -->
+            <div class="col-md-6">
+                <div class="box box-info">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Department Access Information</h3>
+                    </div>
+                    <div class="box-body">
+                        {% if current_user %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>Primary Department</th>
+                                        <td>{{ current_user.department or 'Not Set' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Assigned Departments</th>
+                                        <td>
+                                            {% if current_user.assigned_departments %}
+                                                <ul class="list-unstyled">
+                                                    {% for dept in current_user.assigned_departments %}
+                                                        <li>
+                                                            <i class="fa fa-hospital-o"></i> {{ dept }}
+                                                            {% if dept == current_user.department %}
+                                                                <span class="label label-primary">Primary</span>
+                                                            {% endif %}
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                No departments assigned
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Role</th>
+                                        <td>{{ current_user.role | title }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-warning">
+                                <i class="fa fa-warning"></i> User information not available
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
-
 </div>
-
 {% include 'include_clinical/footer.html' %}

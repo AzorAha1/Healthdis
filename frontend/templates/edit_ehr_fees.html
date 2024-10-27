@@ -12,6 +12,18 @@
     </section>
     
     <section class="content">
+        <!-- Display Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <div id="flash-messages" class="alert-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         <div class="row">
             <div class="col-md-8">
                 <div class="box box-primary">
@@ -36,7 +48,7 @@
                         
                         <div class="form-group">
                             <label for="service_code">Service Code:</label>
-                            <input type="text" class="form-control" id="service_code" name="service_code" value="{{ fee.service_code }}" required>
+                            <input type="text" class="form-control" id="service_code" name="service_code" value="{{ fee.service_code }}" readonly>
                         </div>
                         
                         <div class="form-group">

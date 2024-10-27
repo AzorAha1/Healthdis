@@ -11,6 +11,18 @@
     </section>
 
     <section class="content">
+        <!-- Display Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <div id="flash-messages" class="alert-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-primary">
@@ -106,7 +118,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="phone_number">Phone Number</label>
-                                        <input type="tel" class="form-control" name="phone_number" required>
+                                        <input type="tel" class="form-control" name="phone_number" pattern="[0-9]{11}" title="Please enter a valid 11-digit phone number." required>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -169,7 +181,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="next_of_kin_phone_number">Next of Kin Phone Number</label>
-                                        <input type="tel" class="form-control" name="next_of_kin_phone_number" required>
+                                        <input type="tel" class="form-control" name="next_of_kin_phone_number" pattern="[0-9]{11}" title="Please enter a valid 11-digit phone number." required>
                                     </div>
                                 </div>
                                 <div class="col-md-3">

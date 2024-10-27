@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from http.client import InvalidURL
 import json
 import uuid
 import bson
@@ -6,6 +7,8 @@ from flask import request
 from flask_smorest import Blueprint
 from bson import ObjectId
 from marshmallow import fields, Schema
+import pymongo
+from backend.auth.decorator import login_required, admin_or_role_required
 from backend.extensions import mongo
 from backend.helperfuncs.helperfuncs import get_registration_fee
 from flask import flash, render_template, redirect, url_for, session
@@ -19,9 +22,11 @@ clinical_bp = Blueprint('clinical', 'clinical', url_prefix='/clinical')
 
 @clinical_bp.route('/', methods=['GET'])
 @clinical_bp.route('/dashboard/', methods=['GET'])
-# @login_required
-# @role_required('clinical-services', 'admin-user')
+@login_required
+@admin_or_role_required('clinical-services')
 def clinical_dashboard():
+    """clinical dashboard endpoint"""
+    session.pop('_flashes', None)
     print("Dashboard Session:", session)
     current_patient = session.get('current_patient', {})
     ward_name = session.get('ward', {}).get('name', 'Not Assigned')
@@ -49,38 +54,78 @@ def clinical_dashboard():
 # @login_required
 def doctors_dashboard():
     """this is the doctors dashboard"""
+    session.pop('_flashes', None)
     return render_template('doctors_dashboard.html', title='Doctors Dashboard')
 
 @clinical_bp.route('/nurses_desk/', methods=['GET', 'POST'])
 def nurses_desk():
-    """nurses desk"""
-    departments = mongo.db.departments.find()
-    if request.method == 'POST':
-        department_id = request.form.get('nurse_department')
-        try:
-            department = mongo.db.departments.find_one({'_id': ObjectId(department_id)})
-            
-            if department:
-                department_name = department['department_name']
-                # nurses_queue_name = f"{department_name.lower().replace(' ', '_')}_nurses_queue"
-                #store department name in session
-                session['department_name'] = department_name
-               
-                return redirect(url_for('clinical.nurses_desk_queue', department_name=department_name))
-            else:
-                flash('Department not found', 'danger')
-        except bson.errors.InvalidId:
-            flash('Invalid department ID', 'danger')
-        
-        # If there's any error, redirect back to nurses_desk
-        return redirect(url_for('clinical.nurses_desk'))
+    """Nurses desk view for managing department access"""
+    session.pop('_flashes', None)
     
-    return render_template('nurses_desk.html', title='Nurses Desk', departments=departments)
+    # Get current user info from session email
+    current_user = mongo.db.users.find_one({'email': session.get('email')})
+    
+    if not current_user:
+        session.clear()
+        flash('Session expired. Please login again.', 'warning')
+        return redirect(url_for('auth.login'))
 
+    try:
+        # Get departments based on user role and assignments
+        if current_user.get('role') == 'admin-user':
+            departments = list(mongo.db.departments.find())
+        else:
+            assigned_departments = current_user.get('assigned_departments', [])
+            if not assigned_departments:
+                flash('You have no assigned departments.', 'warning')
+                departments = []
+            else:
+                departments = list(mongo.db.departments.find({
+                    'department_name': {'$in': assigned_departments}
+                }))
+
+        if request.method == 'POST':
+            department_id = request.form.get('nurse_department')
+            
+            if not department_id:
+                flash('Please select a department.', 'danger')
+                return redirect(url_for('clinical.nurses_desk'))
+
+            try:
+                department = mongo.db.departments.find_one({'_id': ObjectId(department_id)})
+                
+                if not department:
+                    flash('Department not found.', 'danger')
+                    return redirect(url_for('clinical.nurses_desk'))
+                
+                department_name = department['department_name']
+                
+                # Check if non-admin user has access to this department
+                if (current_user.get('role') != 'admin-user' and 
+                    department_name not in current_user.get('assigned_departments', [])):
+                    flash('You do not have access to this department.', 'danger')
+                    return redirect(url_for('clinical.nurses_desk'))
+                # Store department name in session
+                session['department_name'] = department_name
+                return redirect(url_for('clinical.nurses_desk_queue', department_name=department_name))
+            except InvalidURL:
+                flash('Invalid department ID.', 'danger')
+                return redirect(url_for('clinical.nurses_desk'))   
+        return render_template('nurses_desk.html',
+                             title='Nurses Desk',
+                             departments=departments,
+                             current_user=current_user,
+                             )                        
+    except (pymongo.errors.PyMongoError, ValueError, KeyError):
+        flash('An unexpected error occurred. Please try again.', 'danger')
+        return redirect(url_for('clinical.nurses_desk'))
 
 @clinical_bp.route('/take_vitals/', methods=['GET', 'POST'])
+@login_required
+@admin_or_role_required('clinical-services')
 def take_vitals():
     """Take vitals for a patient"""
+    session.pop('_flashes', None)
     #show correct session
     print(f'Current Session is {session}')
     ehr_number = session.get('current_patient_ehr')
@@ -97,7 +142,7 @@ def take_vitals():
     department_name = session.get('department_name')
     
     # Fetch rooms for this department
-    department_rooms = list(mongo.db.rooms.find({'room_type': department_name}))
+    department_rooms = list(mongo.db.rooms.find({'room_department': department_name}))
 
     if request.method == 'POST':
         # Get the vitals data from the form
@@ -117,6 +162,33 @@ def take_vitals():
             'department': department_name,
             'nurse': session.get('email', 'Unknown')
         }
+        collection_name = department_name.lower().replace(' ', '_') + '_nurses_queue'
+        if request.form.get('action') == 'send_to_doctor':
+            # Update the patient's status in the queue to "Processed"
+            mongo.db[collection_name].update_one(
+                {'ehr_number': ehr_number}, 
+                {
+                    '$set': {
+                        'status': 'Processed',
+                        'processed_at': datetime.now(),
+                        'processed_by': session.get('email'),
+                        'vitals_taken': True
+                        }
+                    }
+                )
+            
+            doctor_queue_entry = {
+                'ehr_number': ehr_number,
+                'department': department_name,
+                'room_number': request.form.get('room_number'),
+                'status': 'Waiting',
+                'added_at': datetime.now(),
+                'notes': request.form.get('additional_notes'),
+                'vitals': vitals_data
+                }
+            mongo.db.doctor_waiting_queue.insert_one(doctor_queue_entry)
+
+            return redirect(url_for('clinical.send_to_doctor', department=department_name))
         
         mongo.db.nurses_vitals.insert_one(vitals_data)
         flash('Vitals recorded successfully', 'success')
@@ -131,6 +203,7 @@ def take_vitals():
 # @login_required
 # @admin_or_role_required('clinical-services')
 def set_current_patient():
+    session.pop('_flashes', None)
     ehr_number = request.form.get('ehr_number')
     action = request.form.get('action')
     session['current_patient_ehr'] = ehr_number
@@ -148,6 +221,7 @@ def set_current_patient():
 # @admin_or_role_required('clinical-services')
 def hims_dashboard():
     """HIMS dashboard with date filtering"""
+    session.pop('_flashes', None)
     # Get the date filter from the query parameters, default to today
     date_filter = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
     
@@ -183,6 +257,7 @@ def hims_dashboard():
 # @admin_or_role_required('clinical-services')
 def send_to_nurse(ehr_number):
     """send to nurse function"""
+    session.pop('_flashes', None)
     patient = mongo.db.hims_queue.find_one({'ehr_number': ehr_number})
     clinics = mongo.db.departments.find({'department_typ': 'clinic'})
     if not patient:
@@ -220,38 +295,13 @@ def send_to_nurse(ehr_number):
             return redirect(url_for('clinical.send_to_nurse', ehr_number=ehr_number))
     
     return render_template('send_to_nurse.html', title='Send to Nurse', patient=patient, clinics=clinics)
-# @clinical_bp.route('/nurses_desk_queue/<department_name>')
-# @login_required
-# @admin_or_role_required('clinical-services')
-# def nurses_desk_queue(department_name):
-#     """Display the queue for a specific department"""
-#     # get the date filter from te h query parameters, default to today
-#     date_filter = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
 
-#     try:
-#         filter_date = datetime.strptime(date_filter, '%Y-%m-%d')
-#     except ValueError:
-#         flash('Invalid date format. Showing today\'s records.', 'warning')
-#         filter_date = datetime.now()
-#     # set the date range from the filter (entire day)
-#     start_of_day = filter_date.replace(hour=0, minute=0, second=0, microsecond=0)
-#     end_of_day = start_of_day + timedelta(days=1)
-    
-#     # query for records with the date range
-#     date_query = {
-#         'registration_date': {
-#             '$gte': start_of_day,
-#             '$lt': end_of_day
-#         }
-#     }
-#     pending_queue = list(mongo.db[department_name.lower().replace(' ', '_') + '_nurses_queue'].find({**date_query, 'status': 'Pending'}))
-#     processed_queue = list(mongo.db[department_name.lower().replace(' ', '_') + '_nurses_queue'].find({**date_query, 'status': {'$ne': 'Pending'}}))
-#     return render_template('nurses_desk_queue.html', title='Nurses Desk Queue', department_name=department_name, pending_queue=pending_queue, processed_queue=processed_queue, current_date=filter_date.strftime('%m-%d-%Y'))
 @clinical_bp.route('/nurses_desk_queue/<department_name>', methods=['GET', 'POST'])
 # @login_required
 # @admin_or_role_required('clinical-services')
 def nurses_desk_queue(department_name):
     """Display the queue for a specific department"""
+    session.pop('_flashes', None)
     # Get the date filter from the query parameters, default to today
     # date_filter = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
     date_filter = request.form.get('date') or request.args.get('date') or datetime.now().strftime('%Y-%m-%d')
@@ -320,6 +370,7 @@ def patient_list():
 # @login_required
 # @admin_or_role_required('clinical-services')
 def update_patient(hospital_number):
+    session.pop('_flashes', None)
     patient = mongo.db.patients.find_one({'hospital_number': hospital_number})
     timenow = datetime.now()  # Get current date and time
     formatted_time = timenow.strftime('%Y-%m-%d %H:%M:%S %p')
@@ -355,6 +406,7 @@ def update_patient(hospital_number):
 # @login_required
 # @admin_or_role_required('clinical-services')
 def search_patient():
+    session.pop('_flashes', None)
     if request.method == 'POST':
         ehr_number = request.form.get('ehr_number')
         patient = mongo.db.patients.find_one({'ehr_number': ehr_number})
@@ -372,6 +424,7 @@ def search_patient():
 @clinical_bp.route('/new_request', methods=['GET', 'POST'])
 def new_request():
     """Route to create a new request."""
+    session.pop('_flashes', None)
     if request.method == 'POST':
         ehr_number = request.form.get('ehr_number')
         patient = mongo.db.patients.find_one({'ehr_number': ehr_number})
@@ -395,6 +448,7 @@ def new_request():
 # @login_required
 # @admin_or_role_required('clinical-services')
 def new_patient():
+    session.pop('_flashes', None)
     timenow = datetime.now()
     formatted_time = timenow.strftime('%Y-%m-%d %H:%M:%S %p')
     
@@ -487,6 +541,7 @@ def new_patient():
 # @admin_or_role_required('clinical-services')
 @clinical_bp.route('/follow_up', methods=['GET', 'POST'])  
 def follow_up():
+    session.pop('_flashes', None)
     return render_template('follow_up.html', title='Follow-Up Visit')
 
 @clinical_bp.route('/ward_login', methods=['GET', 'POST'])
@@ -494,6 +549,7 @@ def follow_up():
 # @admin_or_role_required('clinical-services')
 def ward_login():
     # Fetch departments with department_typ 'ward'
+    session.pop('_flashes', None)
     wards = mongo.db.departments.find({'department_typ': 'ward'})
     print(session)
     if request.method == 'POST':
@@ -514,6 +570,7 @@ def ward_login():
 # @admin_or_role_required('clinical-services')
 def in_patient_request():
     """This makes request for in-patient"""
+    session.pop('_flashes', None)
     if request.method == 'POST':
         # Get the selected service data from the form
         selected_service = request.form.get('selected_service')
@@ -564,3 +621,79 @@ def in_patient_request():
     
     # Redirect to the dashboard if no POST request or in case of errors
     return redirect(url_for('clinical.clinical_dashboard'))
+
+# send to doctor
+@login_required
+@admin_or_role_required('clinical-services')
+@clinical_bp.route('/send_to_doctor/', methods=['GET', 'POST'])
+# Route implementation
+@clinical_bp.route('/send_to_doctor/', methods=['GET', 'POST'])
+@login_required
+@admin_or_role_required('clinical-services')
+def send_to_doctor():
+    """Send patient to doctor's queue"""
+    ehr_number = session.get('current_patient_ehr')
+    department_name = session.get('department_name')
+    
+    if not ehr_number:
+        flash('No patient selected', 'error')
+        return redirect(url_for('clinical.nurses_desk_queue'))
+    
+    # Get patient details
+    patient = mongo.db.patients.find_one({'ehr_number': ehr_number})
+    if not patient:
+        flash('Patient not found', 'error')
+        return redirect(url_for('clinical.nurses_desk_queue'))
+    
+    # Get latest vitals
+    latest_vitals = mongo.db.nurses_vitals.find_one(
+        {'ehr_number': ehr_number},
+        sort=[('registration_date', -1)]
+    )
+    
+    if not latest_vitals:
+        flash('No vitals found for this patient', 'error')
+        return redirect(url_for('clinical.nurses_desk_queue'))
+    
+    if request.method == 'POST':
+        # Create doctors queue entry
+        doctors_queue_data = {
+            'ehr_number': ehr_number,
+            'patient_name': f"{patient.get('patient_first_name', '')} {patient.get('patient_last_name', '')}",
+            'department': department_name,
+            'room_number': latest_vitals['room_number'],
+            'status': 'Waiting',
+            'assigned_doctor': None,
+            'assigned_at': None,
+            'completed_at': None,
+            'vitals': {
+                'temperature': latest_vitals['temperature'],
+                'pulse_rate': latest_vitals['pulse_rate'],
+                'respiratory_rate': latest_vitals['respiratory_rate'],
+                'blood_pressure_systolic': latest_vitals['blood_pressure_systolic'],
+                'blood_pressure_diastolic': latest_vitals['blood_pressure_diastolic'],
+                'weight': latest_vitals['weight'],
+                'height': latest_vitals['height'],
+                'muac': latest_vitals['muac'],
+                'additional_notes': latest_vitals['additional_notes']
+            },
+            'created_at': datetime.now(),
+            'updated_at': datetime.now()
+        }
+        
+        # Insert into doctors queue
+        mongo.db.doctors_queue.insert_one(doctors_queue_data)
+        
+        # Clear the current patient from session
+        session.pop('current_patient_ehr', None)
+        
+        flash('Patient successfully added to doctor\'s queue', 'success')
+        return redirect(url_for('clinical.nurses_desk_queue'))
+    
+    # GET request - show confirmation page
+    return render_template(
+        'send_to_doctor.html',
+        patient=patient,
+        vitals=latest_vitals,
+        department=department_name
+    )

@@ -28,11 +28,13 @@ medpay_bp = Blueprint('medpay', 'medpay', url_prefix='/medpay')
 # @login_required
 # @admin_or_role_required('medpay-user')
 def medpay_dashboard():
+    session.pop('_flashes', None)
     print(session)
     return render_template('medpay_dashboard.html', title='MedPay Dashboard')
 
 @medpay_bp.route('/make_payment', methods=['GET', 'POST'])
 def make_payment():
+    session.pop('_flashes', None)
     if request.method == 'POST':
         request_id = request.form.get('request_id')
         is_new_patient =  False
@@ -143,6 +145,7 @@ def make_payment():
 @admin_or_role_required('medpay-user')
 def pos_terminal():
     # Initialize `requests` as an empty list by default
+    session.pop('_flashes', None)
     requests = []
 
     if request.method == 'POST':

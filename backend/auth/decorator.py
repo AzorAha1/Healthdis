@@ -33,6 +33,6 @@ def admin_or_role_required(required_role):
                 return f(*args, **kwargs)
             else:
                 flash('You do not have permission to access this page.', 'danger')
-                return redirect(url_for('login'))
+                return redirect(url_for('auth.login'))
         return decorated_function
     return decorator

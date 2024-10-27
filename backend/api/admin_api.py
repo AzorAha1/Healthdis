@@ -1,3 +1,4 @@
+import uuid
 from flask_smorest import Blueprint
 from marshmallow import fields, Schema
 from backend.auth.decorator import login_required, role_required
@@ -21,6 +22,7 @@ admin_bp = Blueprint('admin', 'admin', url_prefix='/admin')
 # @role_required('admin-user')
 def admin_dashboard():
     """admin dashboard"""
+    session.pop('_flashes', None)
     print(session)
     email_name = session.get('email', 'Guest')
     return render_template('admin_dashboard.html', title='Admin Dashboard', email_name=email_name)
@@ -31,7 +33,9 @@ def admin_dashboard():
 # @role_required('admin-user')
 def add_user():
     """add user"""
-    departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
+    # departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
+    departments = list(mongo.db.departments.find())
+    print(departments)
     if request.method == 'POST':
         firstname = request.form.get('firstname')
         middlename = request.form.get('middlename')
@@ -43,11 +47,16 @@ def add_user():
         email = request.form.get('email')
         password = request.form.get('password')
         role = request.form.get('role')
-        department = request.form.get('department')
         phonenumber = request.form.get('phonenumber')
         ehr_number = request.form.get('ehr_number')
         clinical_role = request.form.get('clinical_role', None)
+        # assigned departments
+        assigned_departments = request.form.getlist('assigned_departments')
 
+        if not assigned_departments:
+            flash('Please select at least one department.', 'danger')
+            return redirect(url_for('admin.add_user'))
+            
         # Check if user already exists
         existing_user = mongo.db.users.find_one({'email': email})
         if existing_user:
@@ -79,7 +88,7 @@ def add_user():
             'email': email,
             'password': hashed_password,
             'role': role,
-            'department': department,
+            'assigned_departments': assigned_departments,  # All assigned departments
             'ehr_number': ehr_number,
             'clinical_role': clinical_role
         }
@@ -91,12 +100,14 @@ def add_user():
     return render_template('add_user.html', title='Add User', departments=departments)
 
 # manage rooms
-
 @admin_bp.route('/user_list')
-# @login_required 
+# @login_required
 # @role_required('admin-user')
 def user_list():
     """this shows the list of users created"""
+    show_flash_messages = request.args.get('show_flash_messages', True)
+    if not show_flash_messages:
+        session.pop('_flashes', None)
     all_users = mongo.db.users.find()
     return render_template('user_list.html', title='User List', users=all_users)
 @admin_bp.route('/admin/employee_list')
@@ -104,6 +115,7 @@ def user_list():
 @role_required('admin-user')
 def employee_list():
     """This shows the list of employees."""
+    session.pop('_flashes', None)
     all_employees = mongo.db.employees.find()
     return render_template('employee_list.html', title='Employee List', employees=all_employees)
 @admin_bp.route('/add_ehr_fee', methods=['GET', 'POST'])
@@ -111,28 +123,30 @@ def employee_list():
 # @role_required('admin-user')
 def add_ehr_fee():
     """function to add ehr fee"""
+    service_code = str(uuid.uuid4().hex)[:8].upper() 
+    session.pop('_flashes', None)
     departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
     if request.method == 'POST':
         name = request.form.get('service_name')
         department = request.form.get('department_name')
-        code = request.form.get('service_code')
         fee = request.form.get('service_fee')
 
         # Insert the new fee into the database
         mongo.db.ehr_fees.insert_one({
             'service_name': name,
             'department_name': department,
-            'service_code': code,
+            'service_code': service_code,
             'service_fee': fee
         })
         
         return redirect(url_for('admin.manage_ehr_fees'))
-    return render_template('add_ehr_fee.html', departments=departments)
+    return render_template('add_ehr_fee.html', departments=departments, service_code=service_code)
 @admin_bp.route('/mange_ehr_fees', methods=['GET', 'POST'])
 # @login_required
 # @role_required('admin-user')
 def manage_ehr_fees():
     """Display the EHR Fees table and handle adding new fees."""
+    session.pop('_flashes', None)
     if request.method == 'POST':
         # Add a new fee
         name = request.form['name']
@@ -155,9 +169,10 @@ def manage_ehr_fees():
 
 @admin_bp.route('/delete_ehr_fee/<fee_id>')
 # @login_required
-# @role_required('admin-user')
+# @role_required('admin-user'
 def delete_ehr_fee(fee_id):
     """Delete an EHR Fee"""
+    session.pop('_flashes', None)
     mongo.db.ehr_fees.delete_one({'_id': ObjectId(fee_id)})
     flash('EHR Fee deleted successfully!', 'success')
     return redirect(url_for('admin.manage_ehr_fees'))
@@ -168,19 +183,18 @@ def delete_ehr_fee(fee_id):
 @role_required('admin-user')
 def edit_ehr_fee(fee_id):
     """Edit an existing EHR Fee"""
+    session.pop('_flashes', None)
     try:
         fee = mongo.db.ehr_fees.find_one_or_404({'_id': ObjectId(fee_id)})
     except InvalidId:
         flash('Invalid EHR Fee ID', 'error')
         return redirect(url_for('admin.manage_ehr_fees'))
-
     departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
     if request.method == 'POST':
         department_name = request.form.get('department_name')
         service_name = request.form.get('service_name')
         service_code = request.form.get('service_code')
         service_fee = request.form.get('service_fee')
-
         mongo.db.ehr_fees.update_one(
             {'_id': ObjectId(fee_id)},
             {'$set': {
@@ -198,6 +212,7 @@ def edit_ehr_fee(fee_id):
 # @role_required('admin-user')
 def list_departments():
     """Display a list of departments"""
+    session.pop('_flashes', None)
     departments = mongo.db.departments.find()
     return render_template('department_list.html', title='Department List', departments=departments)
 
@@ -208,6 +223,7 @@ def list_departments():
 # @role_required('admin-user')
 def add_department():
     """Add a new department"""
+    session.pop('_flashes', None)
     if request.method == 'POST':
         department_name = request.form.get('department_name')
         department_id = request.form.get('department_id')
@@ -228,6 +244,7 @@ def add_department():
 # @role_required('admin-user')
 def edit_department(department_id):
     """Edit an existing department"""
+    session.pop('_flashes', None)
     try:
         department = mongo.db.departments.find_one_or_404({'_id': ObjectId(department_id)})
     except InvalidId:
@@ -259,7 +276,7 @@ def refresh_request():
     session.pop('current_request', None)
     # Optionally, flash a message
     flash('Ward session has been cleared. Please select a new ward.', 'info')
-    
+    session.pop('_flashes', None)
     # Redirect to the ward login page
     return redirect(url_for('clinical.ward_login'))
 @admin_bp.route('/request_dashboard', methods=['POST'])
@@ -305,23 +322,25 @@ def edit_user(user_id):
         )
         
         flash('User updated successfully!', 'success')
-        return redirect(url_for('user_list'))
+        return redirect(url_for('admin.user_list'))
     
     return render_template('edit_user.html', user=user, departments=departments)
 
-@admin_bp.route('/delete_user/<user_id>')
+@admin_bp.route('/delete_user/<user_id>', methods=['GET', 'POST'])
 # @login_required
 # @role_required('admin-user')
 def delete_user(user_id):
     """Delete an EHR Fee"""
+    session.pop('_flashes', None)
     mongo.db.users.delete_one({'_id': ObjectId(user_id)})
     flash('EHR Fee deleted successfully!', 'success')
-    return redirect(url_for('user_list'))
+    return redirect(url_for('admin.user_list'))
 @admin_bp.route('/admin/add_employee', methods=['GET', 'POST'])
 # @login_required
 # @role_required('admin-user')
 def add_employee():
     """adding employee"""
+    session.pop('_flashes', None)
     if request.method == 'POST':
         name = request.form.get('name')
         email = request.form.get('email')
@@ -357,14 +376,14 @@ def manage_rooms():
     if request.method == 'POST':
         room_number = request.form.get('room_number')
         if room_number:
-            room_number.strip()
-        room_department = request.form.get('department')
+            room_number = room_number.strip()
+        room_type = request.form.get('department')
         room_capacity = request.form.get('room_capacity')
 
         # Check if room already exists
         existing_room = mongo.db.rooms.find_one({
             'room_number': room_number,
-            'room_department': room_department
+            'room_department': room_type
         })
         if existing_room:
             flash('Room with this name already exists.', 'danger')
@@ -372,7 +391,7 @@ def manage_rooms():
 
         new_room = {
             'room_number': room_number,
-            'room_type': room_department,
+            'room_department': room_type,
             'room_capacity': int(room_capacity) if room_capacity else 0
         }
         mongo.db.rooms.insert_one(new_room)
@@ -386,6 +405,7 @@ def manage_rooms():
 # @role_required('admin-user')
 def delete_department(department_id):
     """Delete a department"""
+    session.pop('_flashes', None)
     mongo.db.departments.delete_one({'_id': ObjectId(department_id)})
     flash('Department deleted successfully!', 'success')
     return redirect(url_for('list_departments'))

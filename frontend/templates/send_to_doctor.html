@@ -38,7 +38,7 @@
             <h1>Send to Doctor</h1>
             <ol class="breadcrumb">
                 <li><a href="{{ url_for('clinical.clinical_dashboard') }}"><i class="fa fa-dashboard"></i> Home</a></li>
-                <li><a href="{{ url_for('clinical.nurses_desk_queue') }}">Nurses Queue</a></li>
+                <li><a href="{{ url_for('clinical.nurses_desk_queue', department_name=department) }}">Nurses Queue</a></li>
                 <li class="active">Send to Doctor</li>
             </ol>
         </section>

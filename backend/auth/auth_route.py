@@ -14,12 +14,18 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         selected_role = request.form.get('role')
-        user = mongo.db.users.find_one({'email': email})
+        
+        #find user based on email
+        current_user = mongo.db.users.find_one_or_404({'email': email})
+        clinical_role = current_user['clinical_role']
+        user = mongo.db.users.find_one_or_404({'email': email})
         if user and check_password_hash(user['password'], password):
             # Check if user is admin or has matching role
             if user['role'] == 'admin-user' or user['role'] == selected_role:
                 session['email'] = email
                 session['role'] = user['role']
+                if selected_role == 'clinical-services':
+                    session['clinical_role'] = clinical_role
                 # Handle redirects based on role and selection
                 if user['role'] == 'admin-user':
                     if selected_role == 'clinical-services':

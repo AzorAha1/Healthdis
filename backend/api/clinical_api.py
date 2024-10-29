@@ -8,7 +8,7 @@ from flask_smorest import Blueprint
 from bson import ObjectId
 from marshmallow import fields, Schema
 import pymongo
-from backend.auth.decorator import login_required, admin_or_role_required
+from backend.auth.decorator import login_required, admin_or_role_required, nurse_check
 from backend.extensions import mongo
 from backend.helperfuncs.helperfuncs import get_registration_fee
 from flask import flash, render_template, redirect, url_for, session
@@ -26,7 +26,7 @@ clinical_bp = Blueprint('clinical', 'clinical', url_prefix='/clinical')
 @admin_or_role_required('clinical-services')
 def clinical_dashboard():
     """clinical dashboard endpoint"""
-    session.pop('_flashes', None)
+    # session.pop('_flashes', None)
     print("Dashboard Session:", session)
     current_patient = session.get('current_patient', {})
     ward_name = session.get('ward', {}).get('name', 'Not Assigned')
@@ -49,6 +49,7 @@ def clinical_dashboard():
                         ward_name=ward_name, 
                         services=services_list)
 
+
 @clinical_bp.route('/doctors_dashboard')
 # @role_required('doctors')
 # @login_required
@@ -58,9 +59,11 @@ def doctors_dashboard():
     return render_template('doctors_dashboard.html', title='Doctors Dashboard')
 
 @clinical_bp.route('/nurses_desk/', methods=['GET', 'POST'])
+@login_required
+@nurse_check
 def nurses_desk():
     """Nurses desk view for managing department access"""
-    session.pop('_flashes', None)
+    # session.pop('_flashes', None)
     
     # Get current user info from session email
     current_user = mongo.db.users.find_one({'email': session.get('email')})
@@ -102,7 +105,9 @@ def nurses_desk():
                 
                 # Check if non-admin user has access to this department
                 if (current_user.get('role') != 'admin-user' and 
-                    department_name not in current_user.get('assigned_departments', [])):
+                    department_name not in current_user.get('assigned_departments', []) and
+                    current_user.get('clinical_role' != 'nurse')
+                    ):
                     flash('You do not have access to this department.', 'danger')
                     return redirect(url_for('clinical.nurses_desk'))
                 # Store department name in session

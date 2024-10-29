@@ -99,6 +99,12 @@
                                         <th>Role</th>
                                         <td>{{ current_user.role | title }}</td>
                                     </tr>
+                                    {% if current_user.clinical_role %}
+                                        <tr>
+                                            <th>Clinical Role</th>
+                                            <td>{{ current_user.clinical_role }}</td>
+                                        </tr>
+                                    {% endif %}
                                 </table>
                             </div>
                         {% else %}

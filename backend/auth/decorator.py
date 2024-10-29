@@ -36,3 +36,15 @@ def admin_or_role_required(required_role):
                 return redirect(url_for('auth.login'))
         return decorated_function
     return decorator
+
+# function to only allow nurses
+
+def nurse_check(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get('clinical_role') != 'nurse' and session.get('role') != 'admin-user':
+            flash('You are not a Nurse', 'danger')
+            return redirect(url_for('clinical.clinical_dashboard'))
+        else:
+            return f(*args, **kwargs)
+    return decorated_function

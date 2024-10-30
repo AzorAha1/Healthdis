@@ -6,6 +6,7 @@
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='static/css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/bootstrap/dist/css/bootstrap.min.css') }}">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="{{ url_for('static', filename='bower_components/font-awesome/css/font-awesome.min.css') }}">
@@ -35,6 +36,60 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
 
     <style>
+
+        .content-wrapper {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+        padding: 20px 0;
+        }
+
+        .card {
+        border: none;
+        margin-bottom: 30px;
+        transition: all 0.3s ease;
+        }
+
+        .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+        border-bottom: none;
+        padding: 1.25rem;
+        }
+
+        .card-body {
+        padding: 1.75rem;
+        }
+
+        .form-control {
+        border-radius: 0.35rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e3e6f0;
+        }
+
+        .form-control:focus {
+        border-color: #bac8f3;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        }
+
+        .btn {
+        padding: 0.75rem;
+        font-weight: 500;
+        border-radius: 0.35rem;
+        transition: all 0.15s ease;
+        }
+
+        .btn:hover {
+        transform: translateY(-1px);
+        }
+
+        .alert {
+        border-radius: 0.35rem;
+        border: none;
+        }
+
         .popup {
             position: relative;
             display: inline-block;

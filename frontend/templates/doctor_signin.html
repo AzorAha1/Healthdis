@@ -1,0 +1,82 @@
+{% include 'include_clinical/header.html' %}
+{% include 'include_clinical/sidebar.html' %}
+
+<div class="content-wrapper bg-light">
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="text-gray-800">Doctor Login</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item">
+              <a href="{{ url_for('clinical.clinical_dashboard') }}">
+                <i class="fa fa-dashboard"></i> Home
+              </a>
+            </li>
+            <li class="breadcrumb-item active">Login</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="container-fluid">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="row justify-content-center">
+        <div class="col-md-6">
+          <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+              <h3 class="card-title mb-0">Select Department and Room</h3>
+            </div>
+            <div class="card-body">
+              <!-- Combined form for both Department and Room -->
+              <form method="POST" action="{{ url_for('clinical.doctor_signin') }}">
+                <!-- Department selection -->
+                <div class="form-group">
+                  <label for="department" class="text-muted">Department:</label>
+                  <select class="form-control form-control-lg" id="department" name="department" required>
+                    {% for department in departments %}
+                        <option value="department.department">{{ department['department_name'] }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <!-- Room selection -->
+                <div class="form-group">
+                  <label for="room" class="text-muted">Room:</label>
+                  <select class="form-control form-cdfontrol-lg" id="room" name="room" required>
+                        {% for room in rooms %}
+                            <option value="room">{{ room_number }}</option>
+                        {% endfor %}
+                  </select>
+                </div>
+
+                <!-- Single Submit Button -->
+                <button type="submit" class="btn btn-primary btn-block">
+                  <i class="fa fa-sign-in mr-2"></i>Sign In
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+{% include 'include_clinical/footer.html' %}

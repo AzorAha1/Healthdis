@@ -49,6 +49,18 @@ def clinical_dashboard():
                         ward_name=ward_name, 
                         services=services_list)
 
+@clinical_bp.route('/doctor_signin', methods=['GET', 'POST'])
+@login_required
+def doctor_signin():
+    """Doctor sign in"""
+
+    
+    departments = mongo.db.departments.find()
+    rooms = []
+    if request.method == 'POST':
+        department = request.form.get('department')
+        rooms = mongo.db.rooms.find({'room_department': department})
+    return render_template('doctor_signin.html', title='Doctor Sign-In', departments=departments, rooms=rooms)
 
 @clinical_bp.route('/doctors_dashboard')
 # @role_required('doctors')
@@ -57,6 +69,7 @@ def doctors_dashboard():
     """this is the doctors dashboard"""
     session.pop('_flashes', None)
     return render_template('doctors_dashboard.html', title='Doctors Dashboard')
+
 
 @clinical_bp.route('/nurses_desk/', methods=['GET', 'POST'])
 @login_required

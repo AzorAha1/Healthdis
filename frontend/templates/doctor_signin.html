@@ -50,23 +50,25 @@
                 <div class="form-group">
                   <label for="department" class="text-muted">Department:</label>
                   <select class="form-control form-control-lg" id="department" name="department" required>
-                    {% for department in departments %}
-                        <option value="department.department">{{ department['department_name'] }}</option>
+                    <option value="">Select Department</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.department_name }}">{{ dept.department_name }}</option>
                     {% endfor %}
                   </select>
                 </div>
-
+              
                 <!-- Room selection -->
                 <div class="form-group">
                   <label for="room" class="text-muted">Room:</label>
-                  <select class="form-control form-cdfontrol-lg" id="room" name="room" required>
-                        {% for room in rooms %}
-                            <option value="room">{{ room_number }}</option>
-                        {% endfor %}
+                  <select class="form-control form-control-lg" id="room" name="room">
+                    <option value="">Select Room</option>
+                    {% for room in rooms %}
+                        <option value="{{ room.room_number }}">Room {{ room.room_number }}</option>
+                    {% endfor %}
                   </select>
+                  <small id="roomMessage" class="form-text text-danger mt-1"></small>
                 </div>
-
-                <!-- Single Submit Button -->
+              
                 <button type="submit" class="btn btn-primary btn-block">
                   <i class="fa fa-sign-in mr-2"></i>Sign In
                 </button>
@@ -79,4 +81,49 @@
   </section>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const departmentSelect = document.getElementById('department');
+        const roomSelect = document.getElementById('room');
+        const messageElement = document.getElementById('roomMessage');
+    
+        departmentSelect.addEventListener('change', function() {
+            const selectedDepartment = this.value;
+            
+            // Clear existing options and message
+            roomSelect.innerHTML = '<option value="">Select Room</option>';
+            messageElement.textContent = '';
+    
+            // Check if a department is selected
+            if (selectedDepartment) {
+                fetch(`/clinical/get_rooms/${selectedDepartment}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(rooms => {
+                        if (rooms && rooms.length > 0) {
+                            rooms.forEach(room => {
+                                const option = document.createElement('option');
+                                option.value = room.room_number;
+                                option.textContent = `Room ${room.room_number}`;
+                                roomSelect.appendChild(option);
+                            });
+                            messageElement.textContent = ''; // Clear message if rooms exist
+                        } else {
+                            roomSelect.innerHTML = '<option value="">No rooms available</option>';
+                            messageElement.textContent = `No rooms are currently assigned to ${selectedDepartment} department`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching rooms:', error);
+                        roomSelect.innerHTML = '<option value="">Error loading rooms</option>';
+                        messageElement.textContent = 'There was an error loading the rooms';
+                    });
+            }
+        });
+    });
+    </script>
 {% include 'include_clinical/footer.html' %}

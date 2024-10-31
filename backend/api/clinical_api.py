@@ -3,7 +3,7 @@ from http.client import InvalidURL
 import json
 import uuid
 import bson
-from flask import request
+from flask import request, jsonify
 from flask_smorest import Blueprint
 from bson import ObjectId
 from marshmallow import fields, Schema
@@ -49,18 +49,40 @@ def clinical_dashboard():
                         ward_name=ward_name, 
                         services=services_list)
 
+
+
 @clinical_bp.route('/doctor_signin', methods=['GET', 'POST'])
 @login_required
 def doctor_signin():
-    """Doctor sign in"""
-
-    
-    departments = mongo.db.departments.find()
+    departments = list(mongo.db.departments.find())
     rooms = []
+    selected_department = None
+    
     if request.method == 'POST':
-        department = request.form.get('department')
-        rooms = mongo.db.rooms.find({'room_department': department})
-    return render_template('doctor_signin.html', title='Doctor Sign-In', departments=departments, rooms=rooms)
+        selected_department = request.form.get('department')
+        try:
+            rooms = list(mongo.db.rooms.find({'room_department': selected_department}))
+        except Exception as e:
+            print(f"Error fetching rooms: {e}")
+            rooms = []
+            
+    return render_template('doctor_signin.html', 
+                         title='Doctor Sign-In',
+                         departments=departments,
+                         rooms=rooms,
+                         selected_department=selected_department)
+
+@clinical_bp.route('/get_rooms/<department>')
+def get_rooms(department):
+    try:
+        rooms = list(mongo.db.rooms.find({'room_department': department}))
+        # Convert ObjectId to string for JSON serialization
+        for room in rooms:
+            room['_id'] = str(room['_id'])
+        return jsonify(rooms)
+    except Exception as e:
+        print(f"Error fetching rooms: {e}")
+        return jsonify([])
 
 @clinical_bp.route('/doctors_dashboard')
 # @role_required('doctors')

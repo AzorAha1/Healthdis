@@ -1,0 +1,140 @@
+{% include 'include_clinical/header.html'%}
+{% include 'include_clinical/sidebar.html'%}
+<div class="container mt-4">
+    <!-- Patient Basic Info Header -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Patient: {{ thepatient.patient_first_name }} {{thepatient.patient_surname_name}}</h5>
+            <span>EHR: {{ thepatient.ehr_number }}</span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <p><strong>Age:</strong> {{ age }} years</p>
+                    <p><strong>Gender:</strong> {{ thepatient.gender }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Blood Type:</strong> {{ thepatient.blood_type }}</p>
+                    <p><strong>Allergies:</strong> {{ thepatient.allergies or 'None reported' }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Last Visit:</strong> {{ thepatient.last_visit_date or 'First Visit' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consultation Form -->
+    <form method="POST" action="{{ url_for('clinical.save_consultation', consultation_id=consultation_id) }}">
+        <!-- Chief Complaint and History -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Chief Complaint & History</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Chief Complaint</label>
+                    <textarea class="form-control" name="chief_complaint" rows="2" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">History of Present Illness</label>
+                    <textarea class="form-control" name="present_illness" rows="3" required></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">Duration of Symptoms</label>
+                        <input type="text" class="form-control" name="symptoms_duration" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Severity (1-10)</label>
+                        <input type="number" class="form-control" name="severity" min="1" max="10">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Examination Findings -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Physical Examination</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">General Appearance</label>
+                    <textarea class="form-control" name="general_appearance" rows="2"></textarea>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Systematic Examination</label>
+                        <textarea class="form-control" name="systematic_examination" rows="4"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Local Examination</label>
+                        <textarea class="form-control" name="local_examination" rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assessment & Plan -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Assessment & Plan</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Diagnosis</label>
+                    <textarea class="form-control" name="diagnosis" rows="2" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Differential Diagnosis</label>
+                    <textarea class="form-control" name="differential_diagnosis" rows="2"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Treatment Plan</label>
+                    <textarea class="form-control" name="treatment_plan" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Prescriptions & Medications</label>
+                    <textarea class="form-control" name="prescriptions" rows="3"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">Follow-up Period</label>
+                        <input type="text" class="form-control" name="follow_up_period">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Special Instructions</label>
+                        <input type="text" class="form-control" name="special_instructions">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tests & Procedures -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Investigations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">Laboratory Tests</label>
+                        <textarea class="form-control" name="lab_tests" rows="3"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Imaging Studies</label>
+                        <textarea class="form-control" name="imaging_studies" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-end gap-2 mb-4">
+            <button type="submit" class="btn btn-success">Save Consultation</button>
+            <a href="" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% include 'include_clinical/footer.html'%}

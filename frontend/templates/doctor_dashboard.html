@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor's Dashboard</title>
+    <!-- Add Bootstrap CSS -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    
+    <div class="container mt-4">
+        <!-- Department and Room Info -->
+        <div class="alert alert-info">
+            <h4>Current Assignment</h4>
+            <p>Department: {{ current_department }}<br>
+               Room: {{ current_room }}</p>
+        </div>
+
+        <!-- Waiting Patients Section -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Waiting Patients Queue</h5>
+            </div>
+            <div class="card-body">
+                {% if waiting_patients %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>EHR Number</th>
+                                    <th>Waiting Since</th>
+                                    <th>Vitals</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient in waiting_patients %}
+                                <tr>
+                                    <td>{{ patient.ehr_number }}</td>
+                                    <td>{{ patient.created_at.strftime('%H:%M:%S %p') }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#vitalsModal{{ patient.ehr_number }}">
+                                            View Vitals
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <span class="text-truncate d-inline-block" style="max-width: 150px;">
+                                            {{ patient.notes }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('clinical.consultation', consultation_id=patient._id) }}" class="btn btn-sm btn-success">Start Consultation</a>
+                                        <a href="{{ url_for('clinical.patient_history', ehr_number=patient.ehr_number) }}" class="btn btn-sm btn-info">View History</a>
+                                    </td>
+                                </tr>
+
+                                <!-- Vitals Modal for each patient -->
+                                <div class="modal fade" id="vitalsModal{{ patient.ehr_number }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Patient Vitals - {{ patient.ehr_number }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <p><strong>Temperature:</strong> {{ patient.vitals.temperature }}°C</p>
+                                                        <p><strong>Pulse Rate:</strong> {{ patient.vitals.pulse_rate }} bpm</p>
+                                                        <p><strong>Respiratory Rate:</strong> {{ patient.vitals.respiratory_rate }} /min</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <p><strong>BP:</strong> {{ patient.vitals.blood_pressure_systolic }}/{{ patient.vitals.blood_pressure_diastolic }} mmHg</p>
+                                                        <p><strong>Weight:</strong> {{ patient.vitals.weight }} kg</p>
+                                                        <p><strong>Height:</strong> {{ patient.vitals.height }} cm</p>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3">
+                                                    <strong>Additional Notes:</strong>
+                                                    <p>{{ patient.vitals.additional_notes }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        No patients currently waiting.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,257 @@
+{% include 'include_clinical/header.html' %}
+{% include 'include_clinical/sidebar.html' %}
+
+<div class="container mt-4">
+    <!-- Patient Info Card -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Patient History - {{ patient.full_name }}</h5>
+            <button class="btn btn-light btn-sm" onclick="window.print()">
+                Print History
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="d-flex flex-column">
+                        <p class="mb-2"><strong>EHR Number:</strong> {{ patient.ehr_number }}</p>
+                        <p class="mb-2"><strong>Age:</strong> {{ patient.age }} years</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex flex-column">
+                        <p class="mb-2"><strong>Gender:</strong> {{ patient.gender }}</p>
+                        <p class="mb-2"><strong>Blood Type:</strong> {{ patient.blood_type }}</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex flex-column">
+                        <p class="mb-2"><strong>Allergies:</strong> 
+                            {% if patient.allergies %}
+                                <span class="text-danger">{{ patient.allergies }}</span>
+                            {% else %}
+                                <span class="text-success">None reported</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Section -->
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Medical Timeline</h5>
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary btn-sm filter-btn active" data-filter="all">All</button>
+                <button class="btn btn-outline-secondary btn-sm filter-btn" data-filter="vitals">Vitals Only</button>
+                <button class="btn btn-outline-secondary btn-sm filter-btn" data-filter="consultation">Consultations Only</button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if not timeline %}
+                <div class="alert alert-info">No medical records found for this patient.</div>
+            {% else %}
+                {% for record in timeline %}
+                <div class="timeline-item mb-4" data-record-type="{{ record.type }}">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="text-muted small">
+                                <i class="fas {% if record.type == 'vitals' %}fa-heartbeat{% else %}fa-stethoscope{% endif %} me-2"></i>
+                                {{ record.registration_date.strftime('%b %d, %Y') }}<br>
+                                {{ record.registration_date.strftime('%I:%M %p') }}
+                            </div>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header {% if record.type == 'vitals' %}bg-info{% else %}bg-success{% endif %} text-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>
+                                            {% if record.type == 'vitals' %}
+                                                Vitals Check
+                                            {% else %}
+                                                Consultation
+                                            {% endif %}
+                                        </span>
+                                        <span class="small">
+                                            {{ record.department }} - Room {{ record.room }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    {% if record.type == 'vitals' %}
+                                        <div class="row g-3">
+                                            <div class="col-md-3">
+                                                <div class="vitals-card p-2 border rounded">
+                                                    <p class="mb-1"><strong>Temperature:</strong></p>
+                                                    <h6 class="mb-0 {% if record.temperature > 37.5 %}text-danger{% endif %}">
+                                                        {{ record.temperature }}°C
+                                                    </h6>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="vitals-card p-2 border rounded">
+                                                    <p class="mb-1"><strong>Blood Pressure:</strong></p>
+                                                    <h6 class="mb-0">{{ record.blood_pressure }}</h6>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="vitals-card p-2 border rounded">
+                                                    <p class="mb-1"><strong>Pulse:</strong></p>
+                                                    <h6 class="mb-0 {% if record.pulse_rate > 100 or record.pulse_rate < 60 %}text-danger{% endif %}">
+                                                        {{ record.pulse_rate }} bpm
+                                                    </h6>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="vitals-card p-2 border rounded">
+                                                    <p class="mb-1"><strong>SpO2:</strong></p>
+                                                    <h6 class="mb-0 {% if record.spo2 < 95 %}text-danger{% endif %}">
+                                                        {{ record.spo2 }}%
+                                                    </h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-3">
+                                            <div class="col-md-4">
+                                                <p><strong>Respiratory Rate:</strong> {{ record.respiratory_rate }}/min</p>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <p><strong>Weight:</strong> {{ record.weight }} kg</p>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <p><strong>Height:</strong> {{ record.height }} cm</p>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="consultation-details">
+                                            <div class="mb-3">
+                                                <h6 class="border-bottom pb-2">Chief Complaint</h6>
+                                                <p class="text-muted">{{ record.chief_complaint }}</p>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <h6 class="border-bottom pb-2">Diagnosis</h6>
+                                                <p class="text-muted">{{ record.diagnosis }}</p>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <h6 class="border-bottom pb-2">Treatment Plan</h6>
+                                                <p class="text-muted">{{ record.treatment_plan }}</p>
+                                            </div>
+                                            
+                                            {% if record.prescriptions %}
+                                            <div class="mb-3">
+                                                <h6 class="border-bottom pb-2">Prescriptions</h6>
+                                                <p class="text-muted">{{ record.prescriptions }}</p>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <div class="text-muted mt-3">
+                                                <small>
+                                                    <i class="fas fa-user-md me-1"></i>
+                                                    Doctor: {{ record.doctor_email }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add this at the end of your template -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter buttons functionality
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            const filterValue = this.getAttribute('data-filter');
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            
+            timelineItems.forEach(item => {
+                if (filterValue === 'all' || item.getAttribute('data-record-type') === filterValue) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Highlight abnormal values
+    function highlightAbnormalValues() {
+        const vitalsCards = document.querySelectorAll('.vitals-card');
+        vitalsCards.forEach(card => {
+            const value = parseFloat(card.querySelector('h6').textContent);
+            if (value) {
+                // Add your specific thresholds here
+                // This is just an example
+                if (value > 100 || value < 60) {
+                    card.classList.add('border-danger');
+                }
+            }
+        });
+    }
+    
+    highlightAbnormalValues();
+});
+</script>
+
+<style>
+.timeline-item {
+    position: relative;
+    padding-left: 20px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.vitals-card {
+    transition: all 0.3s ease;
+}
+
+.vitals-card:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+}
+
+@media print {
+    .btn-group,
+    .sidebar,
+    .header {
+        display: none !important;
+    }
+    
+    .card {
+        break-inside: avoid;
+    }
+    
+    .container {
+        width: 100% !important;
+        max-width: none !important;
+    }
+}
+</style>
+
+{% include 'include_clinical/footer.html' %}

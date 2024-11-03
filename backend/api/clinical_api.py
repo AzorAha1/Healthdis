@@ -3,7 +3,7 @@ from http.client import InvalidURL
 import json
 import uuid
 import bson
-from flask import request, jsonify
+from flask import current_app, request, jsonify
 from flask_smorest import Blueprint
 from bson import ObjectId
 from marshmallow import fields, Schema
@@ -19,7 +19,28 @@ class ClinicalSchema(Schema):
 
 clinical_bp = Blueprint('clinical', 'clinical', url_prefix='/clinical')
 
-
+#setup database index
+# Add these indexes to your database setup or initialization code
+def setup_database_indexes():
+    """Setup necessary database indexes"""
+    # Patient records indexes
+    mongo.db.patient_records.create_index([
+        ('ehr_number', 1),
+        ('consultation_date', -1)
+    ])
+    mongo.db.patient_records.create_index([
+        ('type', 1),
+        ('ehr_number', 1)
+    ])
+    
+    # Nurses vitals indexes
+    mongo.db.nurses_vitals.create_index([
+        ('ehr_number', 1),
+        ('registration_date', -1)
+    ])
+    
+    # Patient index
+    mongo.db.patients.create_index('ehr_number')
 @clinical_bp.route('/', methods=['GET'])
 @clinical_bp.route('/dashboard/', methods=['GET'])
 @login_required
@@ -57,12 +78,21 @@ def doctor_signin():
     departments = list(mongo.db.departments.find())
     rooms = []
     selected_department = None
+    # Get current user's email from session
+    current_user_email = session.get('email')
     
     if request.method == 'POST':
         selected_department = request.form.get('department')
+        selected_room = request.form.get('room')
+        # Store department and room in session with email-specific key
+        session[f'doctor_{current_user_email}_department'] = request.form.get('department')
+        session[f'doctor_{current_user_email}_room'] = request.form.get('room')
         try:
             rooms = list(mongo.db.rooms.find({'room_department': selected_department}))
-        except Exception as e:
+
+            print(f'Successfully selected {selected_department} and room {selected_room}')
+            return redirect(url_for('clinical.doctor_dashboard'))
+        except pymongo.errors.PyMongoError as e:
             print(f"Error fetching rooms: {e}")
             rooms = []
             
@@ -87,11 +117,173 @@ def get_rooms(department):
 @clinical_bp.route('/doctors_dashboard')
 # @role_required('doctors')
 # @login_required
-def doctors_dashboard():
-    """this is the doctors dashboard"""
-    session.pop('_flashes', None)
-    return render_template('doctors_dashboard.html', title='Doctors Dashboard')
+def doctor_dashboard():
 
+    """this is the doctors dashboard"""
+    print(session)
+    current_user_email = session.get('email')
+    current_department = session.get(f'doctor_{current_user_email}_department')
+    current_room = session.get(f'doctor_{current_user_email}_room')
+
+
+
+    if not current_user_email:
+        return redirect(url_for('auth.login'))
+    
+    # Add debug logging
+    print(f"Current Department: {current_department}")
+    print(f"Current Room: {current_room}")
+    
+    # Query all waiting patients for the current department and room
+    query = {
+        'department': current_department,
+        'room_number': current_room,
+        'status': 'Waiting'
+    }
+    
+    # Debug: Print the query
+    print("Query:", query)
+    
+    waiting_patients = list(mongo.db.doctors_queue.find(query).sort('created_at', 1))
+    # save ehr in session
+    if waiting_patients:
+        session['current_patient_ehr'] = waiting_patients[0]['ehr_number']
+    # Debug: Print the number of patients found
+    print(f"Found {len(waiting_patients)} waiting patients")
+    
+    return render_template(
+        'doctor_dashboard.html',
+        title='Doctors Dashboard',
+        waiting_patients=waiting_patients,
+        current_department=current_department,
+        current_room=current_room
+    )
+
+#consultation route
+@clinical_bp.route('/consultation/<string:consultation_id>', methods=['GET', 'POST'])
+# @login_required
+# @role_required('doctors')
+def consultation(consultation_id):
+    """consultation"""
+    waiting_patient = mongo.db.doctors_queue.find_one({
+        '_id': ObjectId(consultation_id),
+        'status': 'Waiting',
+    })
+    
+
+    thepatient = mongo.db.patients.find_one({'ehr_number': waiting_patient['ehr_number']})
+    age = None
+    if thepatient and 'dob' in thepatient:
+        thepatientage = thepatient['dob']
+        
+        # Calculate age
+        dob = datetime.strptime(thepatientage, '%Y-%m-%d')  # Convert string to datetime
+        today = datetime.today()  # Get today's date
+        
+        # Calculate age
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+    
+    if not waiting_patient:
+        flash('Patient not found', 'error')
+        return redirect(url_for('clinical.doctor_dashboard'))
+    return render_template('consultation.html', 
+                         thepatient=thepatient, 
+                         age=age,
+                         consultation_id=consultation_id)
+
+@clinical_bp.route('/save-consultation/<string:consultation_id>', methods=['POST'])
+@login_required
+def save_consultation(consultation_id):
+    """Save consultation data with department and room info."""
+    try:
+        waiting_patient = mongo.db.doctors_queue.find_one({
+            '_id': ObjectId(consultation_id)
+        })
+
+        if not waiting_patient:
+            flash('Patient not found', 'error')
+            return redirect(url_for('clinical.doctor_dashboard'))
+
+        current_user_email = session.get('email')
+        department = session.get(f'doctor_{current_user_email}_department')
+        room = session.get(f'doctor_{current_user_email}_room')
+
+        consultation_data = {}
+        if request.method == 'POST':
+            consultation_data = {
+                'ehr_number': waiting_patient['ehr_number'],
+                'doctor_email': current_user_email,
+                'department': department,
+                'room': room,
+                'consultation_date': datetime.utcnow(),
+                'type': 'consultation',
+                'chief_complaint': request.form.get('chief_complaint'),
+                'present_illness': request.form.get('present_illness'),
+                'symptoms_duration': request.form.get('symptoms_duration'),
+                'severity': request.form.get('severity'),
+                'general_appearance': request.form.get('general_appearance'),
+                'systematic_examination': request.form.get('systematic_examination'),
+                'local_examination': request.form.get('local_examination'),
+                'diagnosis': request.form.get('diagnosis'),
+                'differential_diagnosis': request.form.get('differential_diagnosis'),
+                'treatment_plan': request.form.get('treatment_plan'),
+                'prescriptions': request.form.get('prescriptions'),
+                'follow_up_period': request.form.get('follow_up_period'),
+                'special_instructions': request.form.get('special_instructions'),
+                'lab_tests': request.form.get('lab_tests'),
+                'imaging_studies': request.form.get('imaging_studies')
+            }
+
+            # Save consultation record
+            mongo.db.patient_records.insert_one(consultation_data)
+
+            # Update patient queue status
+            mongo.db.doctors_queue.update_one(
+                {'_id': ObjectId(consultation_id)},
+                {'$set': {'status': 'Completed'}}
+            )
+
+            flash('Consultation saved successfully', 'success')
+            return redirect(url_for('clinical.doctor_dashboard'))
+        
+    except Exception as e:
+        # Log the error for debugging purposes
+        current_app.logger.error(f"An error occurred while saving consultation: {e}")
+        flash('An error occurred while saving the consultation. Please try again.', 'error')
+        return redirect(url_for('clinical.doctor_dashboard'))
+
+@clinical_bp.route('/patient-history/<string:ehr_number>')
+@login_required
+
+
+def patient_history(ehr_number):
+    """
+    View patient history including vitals and consultations.
+    Returns a timeline of patient records sorted by date.
+    """
+    # Check if patient exists
+    patient = mongo.db.patients.find_one({'ehr_number': ehr_number})
+    if not patient:
+        flash('Patient not found', 'error')
+        return redirect(url_for('clinical.doctor_dashboard'))
+    
+    # Get all records - both current and historical
+    current_consultations = list(mongo.db.patient_records.find({'ehr_number': ehr_number, 'type': 'consultation'}))
+    current_vitals = list(mongo.db.patient_records.find({'ehr_number': ehr_number, 'type': 'vitals'}))
+
+    historical_vitals = list(mongo.db.nurses_vitals.find({'ehr_number': ehr_number}))
+
+    # Sort records by date
+    all_records = current_consultations + current_vitals + historical_vitals
+    all_records.sort(key=lambda x: x['registration_date'], reverse=True)
+    return render_template('patient_history.html', 
+                         title='Patient History', 
+                         patient=patient, 
+                         all_records=all_records)
+    
+    
+
+    
 
 @clinical_bp.route('/nurses_desk/', methods=['GET', 'POST'])
 @login_required
@@ -184,7 +376,8 @@ def take_vitals():
         vitals_data = {
             'ehr_number': ehr_number,
             'temperature': request.form.get('temperature'),
-            'pulse_rate': request.form.get('pulse_rate'),
+            'pulse_rate': request.form.get('pulse_rate'),\
+            'type': 'vitals',
             'respiratory_rate': request.form.get('respiratory_rate'),
             'blood_pressure_systolic': request.form.get('blood_pressure_systolic'),
             'blood_pressure_diastolic': request.form.get('blood_pressure_diastolic'),
@@ -215,6 +408,7 @@ def take_vitals():
             
             # Store vitals first
             mongo.db.nurses_vitals.insert_one(vitals_data)
+            mongo.db.patient_records.insert_one(vitals_data)
             
             # Redirect to send_to_doctor with department parameter
             return redirect(url_for('clinical.send_to_doctor', department_name=department_name))
@@ -236,7 +430,7 @@ def set_current_patient():
     session.pop('_flashes', None)
     ehr_number = request.form.get('ehr_number')
     action = request.form.get('action')
-    session['current_patient_ehr'] = ehr_number
+    session['current_patient_ehr'] = ehr_number 
     
     if action == 'view_record':
         return redirect(url_for('clinical.view_patient_record'))

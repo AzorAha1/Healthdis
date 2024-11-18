@@ -121,7 +121,8 @@ def make_payment():
                     })
                     flash(f'Payment processed for {service_name} ({service_code}). Patient added to HIMS queue.', 'success')
                 else:  # Child
-                    mongo.db.pediatric_queue.insert_one({
+                    collection_name = 'pediatric(clinic)_nurses_queue'
+                    mongo.db[collection_name].insert_one({
                         'ehr_number': new_ehr_number,
                         'patient_name': patient_Number,
                         'registration_date': datetime.now(),

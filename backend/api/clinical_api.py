@@ -8,6 +8,7 @@ from flask_smorest import Blueprint
 from bson import ObjectId
 from marshmallow import fields, Schema
 import pymongo
+import pymongo.errors
 from backend.auth.decorator import login_required, admin_or_role_required, nurse_check
 from backend.extensions import mongo
 from backend.helperfuncs.helperfuncs import get_registration_fee
@@ -246,7 +247,7 @@ def save_consultation(consultation_id):
             flash('Consultation saved successfully', 'success')
             return redirect(url_for('clinical.doctor_dashboard'))
         
-    except Exception as e:
+    except pymongo.errors.InvalidURI as e:
         # Log the error for debugging purposes
         current_app.logger.error(f"An error occurred while saving consultation: {e}")
         flash('An error occurred while saving the consultation. Please try again.', 'error')
@@ -706,6 +707,9 @@ def new_patient():
         hospital_number = str(uuid.uuid4())
 
         registration_fee_info = get_registration_fee(dob)
+        if registration_fee_info == None:
+            flash('registration fee not found', 'danger')
+            return redirect(url_for('clinical.new_patient'))
         service_name, service_fee, service_code = registration_fee_info.split(' - ')
         # Check if the patient already exists
         existing_patient = mongo.db.patients.find_one({'hospital_number': hospital_number})
@@ -718,9 +722,9 @@ def new_patient():
                 'enrollment_code': enrollment_code,
                 'temp_ehr_number': enrollment_code,
                 'patient_type': patient_type,
-                'patient_first_name': patient_first_name,
-                'patient_middle_name': patient_middle_name,
-                'patient_surname_name': patient_surname_name,
+                'patient_first_name': patient_first_name.strip(),
+                'patient_middle_name': patient_middle_name.strip(),
+                'patient_surname_name': patient_surname_name.strip(),
                 'dob': dob,
                 'gender': gender,
                 'tribe': tribe,

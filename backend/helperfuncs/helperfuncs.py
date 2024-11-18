@@ -24,16 +24,34 @@ def calculate_age(dob):
 
 # get registeration fee
 def get_registration_fee(dob):
-    age = calculate_age(dob)
-    if age <= 14:
-        ehr_fee_info =  mongo.db.ehr_fees.find_one({"service_name": "NEW CHILD GOPD REGISTRATION"})
-    else:
-        ehr_fee_info = mongo.db.ehr_fees.find_one({"service_name": "NEW ADULT GOPD REGISTRATION"})
-    return f"{ehr_fee_info['service_name']} - {ehr_fee_info['service_fee']} - {ehr_fee_info['service_code']}"
+    try:
+        age = calculate_age(dob)
+        service_name = "NEW CHILD GOPD REGISTRATION" if age <= 14 else "NEW ADULT GOPD REGISTRATION"
+        
+        # Try to get fee info from database, if not found return default values
+        ehr_fee_info = mongo.db.ehr_fees.find_one({"service_name": service_name})
+        
+        if not ehr_fee_info:
+            # Return default values with zero fee
+            return f"{service_name} - 0 - NOT_SET"
+            
+        # Return actual fee info if found
+        return f"{ehr_fee_info['service_name']} - {ehr_fee_info['service_fee']} - {ehr_fee_info['service_code']}"
+        
+    except Exception as e:
+        print(f"Error in get_registration_fee: {str(e)}")
+        # Return default values in case of any error
+        return f"{service_name} - 0 - NOT_SET"
 
 # function to create department
 def create_department(department_id, department_name, department_typ, department_abbreviation):
     try:
+        # Check if department already exists first
+        existing_department = mongo.db.departments.find_one({'department_name': department_name.strip()})
+        if existing_department:
+            print('Department already exists')
+            return False
+
         department_name_clean = department_name.strip()
         mongo.db.departments.insert_one({
             'department_id': department_id,
@@ -41,20 +59,20 @@ def create_department(department_id, department_name, department_typ, department
             'department_typ': department_typ,
             'department_abbreviation': department_abbreviation
         })
+        
         queue_name = f'{department_name_clean.lower().replace(" ", "_")}_nurses_queue'
         mongo.db.create_collection(queue_name)
         return True
     except Exception as e:
         print(e)
         return False
-
 # function to update department 
 def update_department(old_department_id, new_department_name, new_department_abbreviation, new_department_typ):
     try:
         old_department = mongo.db.departments.find_one({'_id': ObjectId(old_department_id)})
         if not old_department:
             return False
-        
+
         result = mongo.db.departments.update_one(
             {'_id': ObjectId(old_department_id)},
             {'$set': {
@@ -63,11 +81,11 @@ def update_department(old_department_id, new_department_name, new_department_abb
                 'department_typ': new_department_typ
             }}
         )
-        
+
         if result.modified_count > 0:
             old_queue_name = f'{old_department["department_name"].lower().replace(" ", "_")}_nurses_queue'
             new_queue_name = f'{new_department_name.lower().replace(" ", "_")}_nurses_queue'
-            
+
             if old_queue_name != new_queue_name and old_queue_name in mongo.db.list_collection_names():
                 mongo.db[old_queue_name].rename(new_queue_name)
             return True

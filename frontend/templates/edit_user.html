@@ -51,14 +51,14 @@
                             <label for="ippisno">IPPIS NO:</label>
                             <input type="text" class="form-control" id="ippisno" name="ippisno" value="{{ user.ippisno }}" required>
                         </div>
-                        <div class="form-group"></div>
-                            <label for="department">Department:</label>
+                        <div class="form-group">
+                            <label for="department">Primary Department:</label>
                             <select class="form-control" id="department" name="department">
-                                <option value="">---Select---</option>
+                                <option value="" disabled>Select a department</option>
                                 {% for department in departments %}
-                                    <option value="{{ department.department_name }}">
-                                       {% if department.department_name == user.department %} selected {% endif %}
-                                       {{ department.department_name }}
+                                    <option value="{{ department.department_name }}" 
+                                        {% if user.department == department.department_name %} selected {% endif %}>
+                                        {{ department.department_name }}
                                     </option>
                                 {% endfor %}
                             </select>

@@ -28,75 +28,97 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', title='Admin Dashboard', email_name=email_name)
 
 # Add user route
-@admin_bp.route('/add_user', methods=['GET', 'POST'])
 # @login_required
 # @role_required('admin-user')
+@admin_bp.route('/add_user', methods=['GET', 'POST'])
 def add_user():
     """add user"""
-    # departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
     departments = list(mongo.db.departments.find())
-    print(departments)
+    
     if request.method == 'POST':
-        firstname = request.form.get('firstname')
-        middlename = request.form.get('middlename')
-        lastname = request.form.get('lastname')
-        ippisno = request.form.get('ippisno')
-        staff_id = request.form.get('staff_id')
-        rank = request.form.get('rank')
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        role = request.form.get('role')
-        phonenumber = request.form.get('phonenumber')
-        ehr_number = request.form.get('ehr_number')
-        clinical_role = request.form.get('clinical_role', None)
-        # assigned departments
+        # Print all form data for debugging
+        print("Form Data:", dict(request.form))
+        print("Departments:", departments)
+        
+        # Gather form data
+        firstname = request.form.get('firstname', '').strip()
+        middlename = request.form.get('middlename', '').strip()
+        lastname = request.form.get('lastname', '').strip()
+        email = request.form.get('email', '').strip()
+        username = request.form.get('username', '').strip()
+        ehr_number = request.form.get('ehr_number', '').strip()
         assigned_departments = request.form.getlist('assigned_departments')
-
-        if not assigned_departments:
-            flash('Please select at least one department.', 'danger')
-            return redirect(url_for('admin.add_user'))
+        
+        # Debug print specific fields
+        print(f"Firstname: {firstname}")
+        print(f"Lastname: {lastname}")
+        print(f"Email: {email}")
+        print(f"Username: {username}")
+        print(f"EHR Number: {ehr_number}")
+        print(f"Assigned Departments: {assigned_departments}")
+        
+        # More comprehensive validation
+        if not all([firstname, lastname, email, username, ehr_number]):
+            print("Validation failed: Missing required fields")
+            flash('All required fields must be filled.', 'danger')
+            return render_template('add_user.html', title='Add User', departments=departments)
+        
+        assigned_departments = assigned_departments if assigned_departments else []
+        
+        try:
+            # Comprehensive existence checks
+            if mongo.db.users.find_one({'email': email}):
+                print(f"User with email {email} already exists")
+                flash('User with this email already exists.', 'danger')
+                return render_template('add_user.html', title='Add User', departments=departments)
             
-        # Check if user already exists
-        existing_user = mongo.db.users.find_one({'email': email})
-        if existing_user:
-            flash('User with this email already exists.', 'danger')
-            return redirect(url_for('admin.add_user'))
-
-        # Check if EHR number already exists
-        existing_ehr = mongo.db.users.find_one({'ehr_number': ehr_number})
-        if existing_ehr:
-            flash('User with this EHR number already exists.', 'danger')
-            return redirect(url_for('admin.add_user'))
-        #check if username already exists
-        existing_username = mongo.db.users.find_one({'username': username})
-        if existing_username:
-            flash('User with this username already exists.', 'danger')
-            return redirect(url_for('admin.add_user'))
-
-        hashed_password = generate_password_hash(password)
-
-        new_user = {
-            'firstname': firstname,
-            'middlename': middlename,
-            'lastname': lastname,
-            'ippisno': ippisno,
-            'staff_id': staff_id,
-            'rank': rank,
-            'username': username,
-            'phonenumber': phonenumber,
-            'email': email,
-            'password': hashed_password,
-            'role': role,
-            'assigned_departments': assigned_departments,  # All assigned departments
-            'ehr_number': ehr_number,
-            'clinical_role': clinical_role
-        }
-        mongo.db.users.insert_one(new_user)
-
-        flash(f'User added successfully with EHR Number: {ehr_number}!', 'success')
-        return redirect(url_for('admin.admin_dashboard'))
-
+            if mongo.db.users.find_one({'username': username}):
+                print(f"User with username {username} already exists")
+                flash('User with this username already exists.', 'danger')
+                return render_template('add_user.html', title='Add User', departments=departments)
+            
+            if mongo.db.users.find_one({'ehr_number': ehr_number}):
+                print(f"User with EHR number {ehr_number} already exists")
+                flash('User with this EHR number already exists.', 'danger')
+                return render_template('add_user.html', title='Add User', departments=departments)
+            
+            # Prepare user data
+            new_user = {
+                'firstname': firstname,
+                'middlename': middlename,
+                'lastname': lastname,
+                'ippisno': request.form.get('ippisno'),
+                'staff_id': request.form.get('staff_id'),
+                'rank': request.form.get('rank'),
+                'username': username,
+                'phonenumber': request.form.get('phonenumber'),
+                'email': email,
+                'department': request.form.get('department'),
+                'password': generate_password_hash(request.form.get('password')),
+                'role': request.form.get('role'),
+                'assigned_departments': assigned_departments,
+                'ehr_number': ehr_number,
+                'clinical_role': request.form.get('clinical_role')
+            }
+            
+            # Insert user
+            print("Attempting to insert user:", new_user)
+            result = mongo.db.users.insert_one(new_user)
+            
+            if result.inserted_id:
+                print(f"User successfully added with EHR Number: {ehr_number}")
+                flash(f'User added successfully with EHR Number: {ehr_number}!', 'success')
+                return redirect(url_for('admin.user_list'))
+            else:
+                print("Failed to insert user")
+                flash('Failed to add user. Please try again.', 'danger')
+                return render_template('add_user.html', title='Add User', departments=departments)
+        
+        except Exception as e:
+            print(f"Unexpected user addition error: {e}")
+            flash('An unexpected error occurred.', 'danger')
+            return render_template('add_user.html', title='Add User', departments=departments)
+    
     return render_template('add_user.html', title='Add User', departments=departments)
 
 # manage rooms
@@ -110,14 +132,7 @@ def user_list():
         session.pop('_flashes', None)
     all_users = mongo.db.users.find()
     return render_template('user_list.html', title='User List', users=all_users)
-@admin_bp.route('/admin/employee_list')
-@login_required
-@role_required('admin-user')
-def employee_list():
-    """This shows the list of employees."""
-    session.pop('_flashes', None)
-    all_employees = mongo.db.employees.find()
-    return render_template('employee_list.html', title='Employee List', employees=all_employees)
+
 @admin_bp.route('/add_ehr_fee', methods=['GET', 'POST'])
 # @login_required
 # @role_required('admin-user')
@@ -229,9 +244,11 @@ def add_department():
         department_id = request.form.get('department_id')
         department_typ = request.form.get('department_typ')
         department_abbreviation = request.form.get('department_abbreviation')
+        
+        # Remove the redundant existing department check
         if create_department(department_id, department_name, department_typ, department_abbreviation):
             flash('Department added successfully!', 'success')
-            return redirect(url_for('list_departments'))
+            return redirect(url_for('admin.list_departments'))
         else:
             flash('Error adding department', 'danger')
     
@@ -250,16 +267,17 @@ def edit_department(department_id):
     except InvalidId:
         flash('Invalid department ID', 'error')
         return redirect(url_for('list_departments'))
-    
-    if request.method == 'POST':
-        department_name = request.form.get('department_name')
-        department_abbreviation = request.form.get('department_abbreviation')
-        department_typ = request.form.get('department_typ')
-        
-        if update_department(department_id, department_name, department_abbreviation, department_typ):
-            flash('Department updated successfully!', 'success')
-            return redirect(url_for('admin.list_departments'))
-        else:
+    try: 
+        if request.method == 'POST':
+            department_name = request.form.get('department_name')
+            department_abbreviation = request.form.get('department_abbreviation')
+            department_typ = request.form.get('department_typ')
+            
+            if update_department(department_id, department_name, department_abbreviation, department_typ):
+                flash('Department updated successfully!', 'success')
+                return redirect(url_for('admin.list_departments'))
+    except Exception as e:
+            print(e)
             flash('Error updating department', 'error')
     
     return render_template('edit_department.html', title='Edit Department', department=department)
@@ -335,38 +353,7 @@ def delete_user(user_id):
     mongo.db.users.delete_one({'_id': ObjectId(user_id)})
     flash('EHR Fee deleted successfully!', 'success')
     return redirect(url_for('admin.user_list'))
-@admin_bp.route('/admin/add_employee', methods=['GET', 'POST'])
-# @login_required
-# @role_required('admin-user')
-def add_employee():
-    """adding employee"""
-    session.pop('_flashes', None)
-    if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        department = request.form.get('department')
-        position = request.form.get('position')
-        phone_number = request.form.get('phone_number')
 
-        # Check if employee already exists
-        existing_employee = mongo.db.employees.find_one({'email': email})
-        if existing_employee:
-            flash('Employee with this email already exists.', 'danger')
-            return redirect(url_for('add_employee'))
-
-        new_employee = {
-            'name': name,
-            'email': email,
-            'department': department,
-            'position': position,
-            'phone_number': phone_number,
-        }
-        mongo.db.employees.insert_one(new_employee)
-
-        flash('Employee added successfully!', 'success')
-        return redirect(url_for('admin_dashboard'))
-
-    return render_template('add_employee.html', title='Add Employee')
 
 @admin_bp.route('/manage_rooms', methods=['GET', 'POST'])
 # @login_required
@@ -408,4 +395,4 @@ def delete_department(department_id):
     session.pop('_flashes', None)
     mongo.db.departments.delete_one({'_id': ObjectId(department_id)})
     flash('Department deleted successfully!', 'success')
-    return redirect(url_for('list_departments'))
+    return redirect(url_for('admin.list_departments'))

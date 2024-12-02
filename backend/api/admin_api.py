@@ -257,26 +257,41 @@ def add_department():
 
 
 @admin_bp.route('/edit_department/<department_id>', methods=['GET', 'POST'])
-# @login_required
-# @role_required('admin-user')
 def edit_department(department_id):
     """Edit an existing department"""
     session.pop('_flashes', None)
+    
     try:
         department = mongo.db.departments.find_one_or_404({'_id': ObjectId(department_id)})
     except InvalidId:
         flash('Invalid department ID', 'error')
-        return redirect(url_for('list_departments'))
-    try: 
-        if request.method == 'POST':
+        return redirect(url_for('admin.list_departments'))
+    
+    if request.method == 'POST':
+        try:
             department_name = request.form.get('department_name')
+            department_id_form = request.form.get('department_id')
             department_abbreviation = request.form.get('department_abbreviation')
             department_typ = request.form.get('department_typ')
             
-            if update_department(department_id, department_name, department_abbreviation, department_typ):
+            # Update in database
+            result = mongo.db.departments.update_one(
+                {'_id': ObjectId(department_id)},
+                {'$set': {
+                    'department_name': department_name,
+                    'department_id': department_id_form,
+                    'department_abbreviation': department_abbreviation,
+                    'department_typ': department_typ
+                }}
+            )
+            
+            if result.modified_count:
                 flash('Department updated successfully!', 'success')
                 return redirect(url_for('admin.list_departments'))
-    except Exception as e:
+            else:
+                flash('No changes made to department', 'warning')
+        
+        except Exception as e:
             print(e)
             flash('Error updating department', 'error')
     
@@ -388,11 +403,30 @@ def manage_rooms():
     departments = mongo.db.departments.find({}, {'_id': 0, 'department_name': 1})
     return render_template('manage_rooms.html', title='Add Room', departments=departments)
 @admin_bp.route('/delete_department/<department_id>')
-# @login_required
-# @role_required('admin-user')
 def delete_department(department_id):
     """Delete a department"""
     session.pop('_flashes', None)
-    mongo.db.departments.delete_one({'_id': ObjectId(department_id)})
-    flash('Department deleted successfully!', 'success')
+    
+    try:
+        # Find the department first to get its name
+        department = mongo.db.departments.find_one({'_id': ObjectId(department_id)})
+        
+        if department:
+            # Create queue name based on department name
+            queue_name = f'{department["department_name"].lower().replace(" ", "_")}_nurses_queue'
+            
+            # Drop the nurses queue collection
+            mongo.db.drop_collection(queue_name)
+            
+            # Delete the department
+            mongo.db.departments.delete_one({'_id': ObjectId(department_id)})
+            
+            flash('Department deleted successfully!', 'success')
+        else:
+            flash('Department not found.', 'error')
+    
+    except Exception as e:
+        print(f"Error deleting department: {e}")
+        flash('Error deleting department.', 'error')
+    
     return redirect(url_for('admin.list_departments'))

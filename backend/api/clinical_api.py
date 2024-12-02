@@ -707,6 +707,7 @@ def new_patient():
         hospital_number = str(uuid.uuid4())
 
         registration_fee_info = get_registration_fee(dob)
+        
         if registration_fee_info == None:
             flash('registration fee not found', 'danger')
             return redirect(url_for('clinical.new_patient'))

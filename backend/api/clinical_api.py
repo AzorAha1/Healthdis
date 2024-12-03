@@ -253,10 +253,8 @@ def save_consultation(consultation_id):
         flash('An error occurred while saving the consultation. Please try again.', 'error')
         return redirect(url_for('clinical.doctor_dashboard'))
 
-@clinical_bp.route('/patient-history/<string:ehr_number>')
-@login_required
-
-
+@clinical_bp.route('/patient_history/<string:ehr_number>') 
+@login_required  
 def patient_history(ehr_number):
     """
     View patient history including vitals and consultations.
@@ -268,19 +266,62 @@ def patient_history(ehr_number):
         flash('Patient not found', 'error')
         return redirect(url_for('clinical.doctor_dashboard'))
     
-    # Get all records - both current and historical
-    current_consultations = list(mongo.db.patient_records.find({'ehr_number': ehr_number, 'type': 'consultation'}))
-    current_vitals = list(mongo.db.patient_records.find({'ehr_number': ehr_number, 'type': 'vitals'}))
-
-    historical_vitals = list(mongo.db.nurses_vitals.find({'ehr_number': ehr_number}))
-
+    # Normalize records to have consistent date and room fields
+    def normalize_record(record):
+        # Use consultation_date or registration_date
+        record['registration_date'] = record.get('consultation_date', record.get('registration_date'))
+        
+        # Normalize room field
+        record['room'] = record.get('room', record.get('room_number', 'N/A'))
+        
+        return record
+    
+    # Get records for the specific EHR number
+    timeline = list(mongo.db.patient_records.find({'ehr_number': ehr_number}))
+    
+    # Normalize records
+    timeline = [normalize_record(record) for record in timeline]
+    
     # Sort records by date
-    all_records = current_consultations + current_vitals + historical_vitals
-    all_records.sort(key=lambda x: x['registration_date'], reverse=True)
-    return render_template('patient_history.html', 
-                         title='Patient History', 
-                         patient=patient, 
-                         all_records=all_records)
+    timeline.sort(key=lambda x: x['registration_date'], reverse=True)
+    
+    return render_template('patient_history.html',
+                           title='Patient History',
+                           patient=patient,
+                           timeline=timeline)
+# def patient_history(ehr_number):
+#     """
+#     View patient history including vitals and consultations.
+#     Returns a timeline of patient records sorted by date.
+#     """
+#     # Check if patient exists
+#     patient = mongo.db.patients.find_one({'ehr_number': ehr_number})
+#     if not patient:
+#         flash('Patient not found', 'error')
+#         return redirect(url_for('clinical.doctor_dashboard'))
+    
+#     # Get all records - both current and historical
+#     current_consultations = list(mongo.db.patient_records.find({'ehr_number': ehr_number, 'type': 'consultation'}))
+#     current_vitals = list(mongo.db.patient_records.find({'ehr_number': ehr_number, 'type': 'vitals'}))
+    
+#     historical_vitals = list(mongo.db.nurses_vitals.find({'ehr_number': ehr_number}))
+    
+#     # Sort records by date, handling potential missing date keys
+#     def get_record_date(record):
+#         # Check for different possible date field names
+#         date_fields = ['registration_date', 'date', 'created_at', 'timestamp']
+#         for field in date_fields:
+#             if field in record:
+#                 return record[field]
+#         return datetime.min  # Default to earliest possible date if no date found
+    
+#     all_records = current_consultations + current_vitals + historical_vitals
+#     all_records.sort(key=get_record_date, reverse=True)
+    
+#     return render_template('patient_history.html',
+#                            title='Patient History',
+#                            patient=patient,
+#                            timeline=all_records)
     
     
 

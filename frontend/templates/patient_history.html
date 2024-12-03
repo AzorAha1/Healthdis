@@ -50,7 +50,7 @@
             </div>
         </div>
         <div class="card-body">
-            {% if not timeline %}
+            {% if not timeline or timeline|length == 0 %}
                 <div class="alert alert-info">No medical records found for this patient.</div>
             {% else %}
                 {% for record in timeline %}
@@ -75,7 +75,7 @@
                                             {% endif %}
                                         </span>
                                         <span class="small">
-                                            {{ record.department }} - Room {{ record.room }}
+                                            {{ record.get('department', 'N/A') }} - Room {{ record.get('room', 'N/A') }}
                                         </span>
                                     </div>
                                 </div>
@@ -85,7 +85,7 @@
                                             <div class="col-md-3">
                                                 <div class="vitals-card p-2 border rounded">
                                                     <p class="mb-1"><strong>Temperature:</strong></p>
-                                                    <h6 class="mb-0 {% if record.temperature > 37.5 %}text-danger{% endif %}">
+                                                    <h6 class="mb-0 {% if record.temperature|float > 37.5 %}text-danger{% endif %}">
                                                         {{ record.temperature }}°C
                                                     </h6>
                                                 </div>
@@ -93,13 +93,15 @@
                                             <div class="col-md-3">
                                                 <div class="vitals-card p-2 border rounded">
                                                     <p class="mb-1"><strong>Blood Pressure:</strong></p>
-                                                    <h6 class="mb-0">{{ record.blood_pressure }}</h6>
+                                                    <h6 class="mb-0">
+                                                        {{ record.get('blood_pressure_systolic', 'N/A') }}/{{ record.get('blood_pressure_diastolic', 'N/A') }}
+                                                    </h6>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="vitals-card p-2 border rounded">
                                                     <p class="mb-1"><strong>Pulse:</strong></p>
-                                                    <h6 class="mb-0 {% if record.pulse_rate > 100 or record.pulse_rate < 60 %}text-danger{% endif %}">
+                                                    <h6 class="mb-0 {% if record.pulse_rate|float > 100 or record.pulse_rate|float < 60 %}text-danger{% endif %}">
                                                         {{ record.pulse_rate }} bpm
                                                     </h6>
                                                 </div>
@@ -107,8 +109,8 @@
                                             <div class="col-md-3">
                                                 <div class="vitals-card p-2 border rounded">
                                                     <p class="mb-1"><strong>SpO2:</strong></p>
-                                                    <h6 class="mb-0 {% if record.spo2 < 95 %}text-danger{% endif %}">
-                                                        {{ record.spo2 }}%
+                                                    <h6 class="mb-0">
+                                                        N/A
                                                     </h6>
                                                 </div>
                                             </div>
@@ -128,20 +130,20 @@
                                         <div class="consultation-details">
                                             <div class="mb-3">
                                                 <h6 class="border-bottom pb-2">Chief Complaint</h6>
-                                                <p class="text-muted">{{ record.chief_complaint }}</p>
+                                                <p class="text-muted">{{ record.get('chief_complaint', 'No complaint recorded') }}</p>
                                             </div>
                                             
                                             <div class="mb-3">
                                                 <h6 class="border-bottom pb-2">Diagnosis</h6>
-                                                <p class="text-muted">{{ record.diagnosis }}</p>
+                                                <p class="text-muted">{{ record.get('diagnosis', 'No diagnosis recorded') }}</p>
                                             </div>
                                             
                                             <div class="mb-3">
                                                 <h6 class="border-bottom pb-2">Treatment Plan</h6>
-                                                <p class="text-muted">{{ record.treatment_plan }}</p>
+                                                <p class="text-muted">{{ record.get('treatment_plan', 'No treatment plan recorded') }}</p>
                                             </div>
                                             
-                                            {% if record.prescriptions %}
+                                            {% if record.get('prescriptions') %}
                                             <div class="mb-3">
                                                 <h6 class="border-bottom pb-2">Prescriptions</h6>
                                                 <p class="text-muted">{{ record.prescriptions }}</p>
@@ -151,7 +153,7 @@
                                             <div class="text-muted mt-3">
                                                 <small>
                                                     <i class="fas fa-user-md me-1"></i>
-                                                    Doctor: {{ record.doctor_email }}
+                                                    Doctor: {{ record.get('doctor_email', 'N/A') }}
                                                 </small>
                                             </div>
                                         </div>

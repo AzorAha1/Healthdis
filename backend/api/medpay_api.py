@@ -32,13 +32,14 @@ def medpay_dashboard():
     print(session)
     return render_template('medpay_dashboard.html', title='MedPay Dashboard')
 
+
 @medpay_bp.route('/make_payment', methods=['GET', 'POST'])
 def make_payment():
     session.pop('_flashes', None)
     if request.method == 'POST':
         request_id = request.form.get('request_id')
         is_new_patient =  False
-        if not request_id:
+        if not request_id: 
             flash('No request ID provided', 'error')
             return redirect(url_for('medpay.pos_terminal'))
         
@@ -108,9 +109,17 @@ def make_payment():
             
             # Remove the request from the requests collection
             mongo.db.requests.delete_one({'_id': ObjectId(request_id)})
-            
+            if service_name.lower() == "follow up":
+            # Follow-up: Always add to HIMS queue
+                mongo.db.hims_queue.insert_one({
+                    'ehr_number': new_ehr_number,
+                    'patient_name': patient_Number,
+                    'registration_date': datetime.now(),
+                    'status': 'Pending'
+                })
+                flash('Follow-up payment processed. Patient added to HIMS queue.', 'success')
             # Calculate age and determine queue
-            if dob:
+            elif dob:
                 patient_age = calculate_age(dob)
                 if patient_age > 14 and is_new_patient:  # Adult
                     mongo.db.hims_queue.insert_one({

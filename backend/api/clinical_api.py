@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from http.client import InvalidURL
 import json
+import re
 import uuid
 import bson
 from flask import current_app, request, jsonify
@@ -289,43 +290,6 @@ def patient_history(ehr_number):
                            title='Patient History',
                            patient=patient,
                            timeline=timeline)
-# def patient_history(ehr_number):
-#     """
-#     View patient history including vitals and consultations.
-#     Returns a timeline of patient records sorted by date.
-#     """
-#     # Check if patient exists
-#     patient = mongo.db.patients.find_one({'ehr_number': ehr_number})
-#     if not patient:
-#         flash('Patient not found', 'error')
-#         return redirect(url_for('clinical.doctor_dashboard'))
-    
-#     # Get all records - both current and historical
-#     current_consultations = list(mongo.db.patient_records.find({'ehr_number': ehr_number, 'type': 'consultation'}))
-#     current_vitals = list(mongo.db.patient_records.find({'ehr_number': ehr_number, 'type': 'vitals'}))
-    
-#     historical_vitals = list(mongo.db.nurses_vitals.find({'ehr_number': ehr_number}))
-    
-#     # Sort records by date, handling potential missing date keys
-#     def get_record_date(record):
-#         # Check for different possible date field names
-#         date_fields = ['registration_date', 'date', 'created_at', 'timestamp']
-#         for field in date_fields:
-#             if field in record:
-#                 return record[field]
-#         return datetime.min  # Default to earliest possible date if no date found
-    
-#     all_records = current_consultations + current_vitals + historical_vitals
-#     all_records.sort(key=get_record_date, reverse=True)
-    
-#     return render_template('patient_history.html',
-#                            title='Patient History',
-#                            patient=patient,
-#                            timeline=all_records)
-    
-    
-
-    
 
 @clinical_bp.route('/nurses_desk/', methods=['GET', 'POST'])
 @login_required
@@ -475,7 +439,7 @@ def set_current_patient():
     session['current_patient_ehr'] = ehr_number 
     
     if action == 'view_record':
-        return redirect(url_for('clinical.view_patient_record'))
+        return redirect(url_for('clinical.patient_history', ehr_number=ehr_number))
     elif action == 'take_vitals':
         return redirect(url_for('clinical.take_vitals'))
     else:
@@ -519,34 +483,78 @@ def hims_dashboard():
                         current_date=filter_date.strftime('%m-%d-%Y'))
 
 @clinical_bp.route('/send_to_nurse/<ehr_number>', methods=['GET', 'POST'])
-# @login_required
-# @admin_or_role_required('clinical-services')
 def send_to_nurse(ehr_number):
     """send to nurse function"""
     session.pop('_flashes', None)
+    
+    # Try to find the patient, first with an exact match
     patient = mongo.db.hims_queue.find_one({'ehr_number': ehr_number})
-    clinics = mongo.db.departments.find({'department_typ': 'clinic'})
+    
+    # If not found, try a case-insensitive regex match
     if not patient:
+        patient = mongo.db.hims_queue.find_one({
+            'ehr_number': {'$regex': f'^{re.escape(ehr_number)}$', '$options': 'i'}
+        })
+    
+    # If still not found, try a partial match
+    if not patient:
+        patient = mongo.db.hims_queue.find_one({
+            'ehr_number': {'$regex': re.escape(ehr_number), '$options': 'i'}
+        })
+    
+    # Debug print to see what's happening
+    print(f"Searched EHR Number: {ehr_number}")
+    print(f"Found Patient: {patient}")
+    
+    # If no patient found after all attempts
+    if not patient:
+        # Optional: Print all patients in HIMS queue for debugging
+        all_patients = list(mongo.db.hims_queue.find())
+        print("All patients in HIMS queue:")
+        for p in all_patients:
+            print(p)
+        
         flash('Patient not found in the HIMS queue', 'danger')
-        return redirect(url_for('hims_dashboard'))
+        return redirect(url_for('clinical.hims_dashboard'))
+    
+    clinics = mongo.db.departments.find({'department_typ': 'clinic'})
+    
     if request.method == 'POST':
         selected_clinic_id = request.form.get('clinic')
         if selected_clinic_id:
-            # Update patient's status or move them to the selected clinic
             try:
                 selected_clinic_id = ObjectId(selected_clinic_id)
             except bson.errors.InvalidId:
                 flash('Invalid clinic ID', 'warning')
                 return redirect(url_for('clinical.send_to_nurse', ehr_number=ehr_number))
+            
             selected_clinic = mongo.db.departments.find_one({'_id': selected_clinic_id})
+            
             if selected_clinic:
-                mongo.db.hims_queue.update_one(
-                    {'ehr_number': ehr_number},
+                # Use multiple matching strategies for update
+                update_result = mongo.db.hims_queue.update_many(
+                    {
+                        '$or': [
+                            {'ehr_number': ehr_number},
+                            {'ehr_number': {'$regex': f'^{re.escape(ehr_number)}$', '$options': 'i'}},
+                            {'ehr_number': {'$regex': re.escape(ehr_number), '$options': 'i'}}
+                        ]
+                    },
                     {'$set': {
                         'status': 'In Clinic',
                         'clinic': selected_clinic['department_name']
                     }}
                 )
+                
+                # Debug print update results
+                print(f"Update Result - Modified Count: {update_result.modified_count}")
+                
+                if update_result.modified_count == 0:
+                    print("Warning: No documents were updated")
+                    flash('Unable to update patient status', 'warning')
+                    return redirect(url_for('clinical.hims_dashboard'))
+                
+                # Add to nurse's queue
                 mongo.db[selected_clinic['department_name'].lower().replace(' ', '_') + '_nurses_queue'].insert_one({
                     'ehr_number': ehr_number,
                     'patient_name': patient['patient_name'],
@@ -554,6 +562,7 @@ def send_to_nurse(ehr_number):
                     'department_name': selected_clinic['department_name'],
                     'status': 'Pending'
                 })
+                
                 flash(f'Patient sent to {selected_clinic["department_name"]} successfully!', 'success')
                 return redirect(url_for('clinical.hims_dashboard'))
         else:
@@ -760,7 +769,6 @@ def new_patient():
         else:
             # Save patient data to MongoDB
             new_patient = {
-                
                 'enrollment_code': enrollment_code,
                 'temp_ehr_number': enrollment_code,
                 'patient_type': patient_type,
@@ -809,11 +817,87 @@ def new_patient():
 
 # @login_required
 # @admin_or_role_required('clinical-services')
-@clinical_bp.route('/follow_up', methods=['GET', 'POST'])  
-def follow_up():
-    session.pop('_flashes', None)
-    return render_template('follow_up.html', title='Follow-Up Visit')
+@clinical_bp.route('/followup_search', methods=['GET', 'POST'])  
+def followup_search():
+    """follow up search"""
+    if request.method == 'POST':
+        ehr_number = request.form.get('ehr_number', '').strip()
+        
+        # Try exact match first
+        patient = mongo.db.patients.find_one({'ehr_number': ehr_number})
+        
+        if patient:
+            # Store patient info in a followup-specific session key
+            session['followup_current_patient'] = {
+                'patient_name': f"{patient['patient_first_name']} {patient.get('patient_middle_name', '')} {patient['patient_surname_name']}".strip(),
+                'ehr_number': patient['ehr_number'],
+                'hospital_number': patient['hospital_number']
+            }
+            return redirect(url_for('clinical.followup_page'))
+        else:
+            flash('Patient not found.', 'danger')
+    return render_template('followup_search.html', title='Follow-Up Visit')
 
+
+@clinical_bp.route('/followup_page', methods=['GET', 'POST'])
+def followup_page():
+    """Follow up page"""
+    # Clear previous flash messages
+    session.pop('_flashes', None)
+    
+    # Retrieve current patient from followup-specific session key
+    current_patient = session.get('followup_current_patient', {})
+    
+    # Validate patient selection
+    if not current_patient:
+        flash('No patient selected', 'error')
+        return redirect(url_for('clinical.followup_search'))
+    
+    # Retrieve followup fee information
+    followup_fee_info = mongo.db.ehr_fees.find_one({"service_name": "follow up".strip()}) or {}
+    
+    # Prepare request data
+    if request.method == 'POST':
+        requests = {
+            'patient_hospital_number': current_patient.get('hospital_number'),
+            'patient_Number': f"{current_patient.get('patient_name', 'Unknown')} - {current_patient.get('ehr_number', 'Unknown')}",
+            'Department': 'HIMS',
+            'Service_Code': followup_fee_info.get('service_code', 'Unknown'),
+            'Service_Name': followup_fee_info.get('service_name', 'Unknown'),
+            'Cost': followup_fee_info.get('service_fee', 0),
+            'Status': 'Pending',
+            'ehr_number': current_patient.get('ehr_number', 'Unknown'),
+            'Invoice Date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        }
+    
+    # Insert request
+        
+        try:
+            result = mongo.db.requests.insert_one(requests)
+            if result.inserted_id:
+                flash('Payment request sent successfully!', 'success')
+            else:
+                flash('Payment request failed', 'warning')
+        except Exception as e:
+            flash(f'Error inserting payment request: {e}', 'danger')
+    
+    # Pass the current_patient explicitly to the template
+    return render_template('followup_page.html', 
+                           title='Follow-Up Visit', 
+                           current_patient=current_patient)
+
+@clinical_bp.route('/confirm_payment', methods=['GET'])
+def confirm_payment():
+    """Notify payment request sent"""
+    # Retrieve current patient
+    current_patient = session.get('followup_current_patient', {})
+
+    if not current_patient:
+        flash('No patient selected', 'error')
+        return redirect(url_for('clinical.followup_search'))
+
+    flash('Payment request sent successfully!', 'success')
+    return redirect(url_for('clinical.followup_page'))
 @clinical_bp.route('/ward_login', methods=['GET', 'POST'])
 # @login_required
 # @admin_or_role_required('clinical-services')

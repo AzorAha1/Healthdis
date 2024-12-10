@@ -94,3 +94,5 @@ def update_department(old_department_id, new_department_name, new_department_abb
         print(e)
         return False
 
+# check how much followup costs
+

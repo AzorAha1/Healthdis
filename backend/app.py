@@ -10,12 +10,13 @@ from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta
 from config import Config
 from flask_smorest import Api
+from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/statics')
     app.config.from_object(Config)
     mongo.init_app(app)
-
+    CORS(app=app)
     api = Api(app)
 
     from backend.api.medpay_api import medpay_bp

@@ -1,6 +1,7 @@
 import uuid
 from flask_smorest import Blueprint
 from marshmallow import fields, Schema
+import pymongo
 from backend.auth.decorator import login_required, role_required
 from backend.helperfuncs.helperfuncs import create_department, update_department
 from backend.extensions import mongo
@@ -114,7 +115,7 @@ def add_user():
                 flash('Failed to add user. Please try again.', 'danger')
                 return render_template('add_user.html', title='Add User', departments=departments)
         
-        except Exception as e:
+        except (pymongo.errors.DuplicateKeyError, pymongo.errors.OperationFailure) as e:
             print(f"Unexpected user addition error: {e}")
             flash('An unexpected error occurred.', 'danger')
             return render_template('add_user.html', title='Add User', departments=departments)
@@ -284,7 +285,6 @@ def edit_department(department_id):
                     'department_typ': department_typ
                 }}
             )
-            
             if result.modified_count:
                 flash('Department updated successfully!', 'success')
                 return redirect(url_for('admin.list_departments'))

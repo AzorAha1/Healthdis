@@ -16,7 +16,7 @@ def create_app():
     app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/statics')
     app.config.from_object(Config)
     mongo.init_app(app)
-    CORS(app=app)
+    CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}}, supports_credentials=True)
     api = Api(app)
 
     from backend.api.medpay_api import medpay_bp

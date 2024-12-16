@@ -49,6 +49,8 @@ auth_bp = Blueprint('auth', __name__)
 #             flash('Invalid email or password', 'danger')
 #     return render_template('login.html', title='Login')
 
+
+    
 @auth_bp.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -63,9 +65,10 @@ def login():
         if user['role'] == selected_role:
             session['email'] = email
             session['role'] = user['role']
-            # Redirect logic based on role
+            
+            # Return full paths instead of using url_for
             if user['role'] == 'admin-user':
-                return jsonify(success=True, redirectUrl='/admin-dashboard')
+                return jsonify(success=True, redirectUrl='/admin/dashboard')
             elif user['role'] == 'clinical-services':
                 return jsonify(success=True, redirectUrl='/clinical-dashboard')
             elif user['role'] == 'medpay-user':

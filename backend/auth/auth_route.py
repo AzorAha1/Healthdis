@@ -50,34 +50,51 @@ auth_bp = Blueprint('auth', __name__)
 #     return render_template('login.html', title='Login')
 
 
-    
 @auth_bp.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
+    print("Received login data:", data)  # Debug: Print received data
     email = data.get('email')
     password = data.get('password')
     selected_role = data.get('role')
 
     # Find user in the database
     user = mongo.db.users.find_one({'email': email})
+    clinical_role = user['clinical_role']
+    print("Found user:", user)  # Debug: Print found user
 
     if user and check_password_hash(user['password'], password):
-        if user['role'] == selected_role:
+        print("User's role from database:", user['role'])  # Debug: Print user's role
+        print("Password check passed")  # Debug: Confirm password verification
+        
+        # Check if role is 'admin-user' or match roles for others
+        if user['role'] == 'admin-user' or user['role'] == selected_role:
             session['email'] = email
             session['role'] = user['role']
-            
+            if selected_role == 'clinical-services':
+                session['clinical_role'] = clinical_role
             # Return full paths instead of using url_for
             if user['role'] == 'admin-user':
-                return jsonify(success=True, redirectUrl='/admin/dashboard')
+                if selected_role == 'clinical-services':
+                    print('Admin Logged into Clinical Services')
+                    # clinical services url redirect
+                    return jsonify(success=True, redirectUrl=url_for('clinical.clinical_dashboard'))
+                elif selected_role == 'medpay-user':
+                    print('Admin Logged in as Medpay user')
+                    return jsonify(success=True, redirectUrl=url_for('medpay.medpay_dashboard'))
+                else:
+                    print('Admin logged into admin dashboard')
+                    return jsonify(success=True, redirectUrl=url_for('admin.admin_dashboard'))
             elif user['role'] == 'clinical-services':
-                return jsonify(success=True, redirectUrl='/clinical-dashboard')
+                return jsonify(success=True, redirectUrl=url_for('clinical.clinical_dashboard'))
             elif user['role'] == 'medpay-user':
-                return jsonify(success=True, redirectUrl='/medpay-dashboard')
+                return jsonify(success=True, redirectUrl=url_for('medpay.medpay_dashboard'))
         else:
+            print("Role mismatch")  # Debug: Role verification
             return jsonify(success=False, message="Invalid role selected")
     else:
+        print("Login failed")  # Debug: Login failure
         return jsonify(success=False, message="Invalid email or password")
-
 @auth_bp.route('/logout')
 def logout():
     """logout endpoint"""

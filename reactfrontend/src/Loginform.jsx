@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import tauraimage from './assets/taura.jpg';
 import axios from './api/axios';
+import { useNavigate } from 'react-router-dom';
+import { use } from 'react';
 
 const LoginForm = () => {
     const [email, setEmail] = useState('');
@@ -11,29 +13,41 @@ const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
 
+    
+
+    const navigate = useNavigate();
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setErrorMessage('');
-
+    
         // Basic validation
         if (!email || !password) {
             setErrorMessage('Please enter both email and password');
             setLoading(false);
             return;
         }
-
+    
         try {
             const response = await axios.post('/api/login', { 
                 email, 
                 password, 
-                role, 
+                role,
             });
-            
+    
             if (response.data.success) {
-                navigate(response.data.redirectUrl);
+                // Log the full redirectUrl for debugging
+                console.log('Redirect URL:', response.data.redirectUrl);
+                
+                // Extract the path from the full URL
+                const redirectPath = new URL(response.data.redirectUrl, window.location.origin).pathname;
+                
+                // Log the extracted path for debugging
+                console.log('Extracted Path:', redirectPath);
+                navigate(redirectPath);
             } else {
-                setErrorMessage(response.data.message);
+                setErrorMessage(response.data.message || 'An unknown error occurred');
             }
         } catch (error) {
             console.error('Login error:', error.response ? error.response.data : error.message);

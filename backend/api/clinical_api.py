@@ -43,34 +43,59 @@ def setup_database_indexes():
     
     # Patient index
     mongo.db.patients.create_index('ehr_number')
-@clinical_bp.route('/', methods=['GET'])
-@clinical_bp.route('/dashboard/', methods=['GET'])
-@login_required
-@admin_or_role_required('clinical-services')
+# @clinical_bp.route('/', methods=['GET'])
+# @clinical_bp.route('/dashboard/', methods=['GET'])
+# @login_required
+# @admin_or_role_required('clinical-services')
+# def clinical_dashboard():
+#     """clinical dashboard endpoint"""
+#     # session.pop('_flashes', None)
+#     print("Dashboard Session:", session)
+#     current_patient = session.get('current_patient', {})
+#     ward_name = session.get('ward', {}).get('name', 'Not Assigned')
+    
+#     if ward_name != 'Not Assigned':
+#         services_cursor = mongo.db.ehr_fees.find({'department_name': ward_name})
+#         services_list = list(services_cursor)
+#         for service in services_list:
+#             service['_id'] = str(service['_id'])
+#     else:
+#         services_list = []
+    
+#     print(services_list)
+#     email_name = session.get('email', 'Guest')
+    
+#     return render_template('clinical_dashboard.html', 
+#                         title='Clinical Dashboard', 
+#                         email_name=email_name,
+#                         current_patient=current_patient, 
+#                         ward_name=ward_name, 
+#                         services=services_list)
+
+@clinical_bp.route('/dashboard', methods=['GET'])
+# @login_required
+# @admin_or_role_required('clinical-services')
 def clinical_dashboard():
-    """clinical dashboard endpoint"""
-    # session.pop('_flashes', None)
-    print("Dashboard Session:", session)
+    """Clinical dashboard API"""
     current_patient = session.get('current_patient', {})
     ward_name = session.get('ward', {}).get('name', 'Not Assigned')
-    
+    email_name = session.get('email', 'Guest')
+
     if ward_name != 'Not Assigned':
         services_cursor = mongo.db.ehr_fees.find({'department_name': ward_name})
-        services_list = list(services_cursor)
-        for service in services_list:
-            service['_id'] = str(service['_id'])
+        services_list = [
+            {'_id': str(service['_id']), 'service_name': service['service_name'], 'service_fee': service['service_fee']}
+            for service in services_cursor
+        ]
     else:
         services_list = []
-    
-    print(services_list)
-    email_name = session.get('email', 'Guest')
-    
-    return render_template('clinical_dashboard.html', 
-                        title='Clinical Dashboard', 
-                        email_name=email_name,
-                        current_patient=current_patient, 
-                        ward_name=ward_name, 
-                        services=services_list)
+
+    return jsonify({
+        'email_name': email_name,
+        'current_patient': current_patient,
+        'ward_name': ward_name,
+        'services': services_list
+    })
 
 
 

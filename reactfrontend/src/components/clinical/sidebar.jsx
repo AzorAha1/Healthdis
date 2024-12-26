@@ -1,32 +1,45 @@
 import React, { useState } from 'react'; // Add useState
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faTachometerAlt, faFileInvoiceDollar, faStethoscope, faClinicMedical, faBed, faPaperPlane, faArrowLeft, faArrowRight, faArrowDown, faArrowRightRotate, faUserAlt } from '@fortawesome/free-solid-svg-icons';
-import { faEarlybirds } from '@fortawesome/free-brands-svg-icons';
+import { faHome, faTachometerAlt, faFileInvoiceDollar, faStethoscope, faClinicMedical, faBed, faPaperPlane, faArrowLeft, faArrowRight, faArrowDown, faArrowRightRotate, faUserAlt, faCodePullRequest, faAd, faAdd, faUserEdit, faBedPulse, faUserDoctor, faUserNurse, faList } from '@fortawesome/free-solid-svg-icons';
 import { faHospitalAlt } from '@fortawesome/free-regular-svg-icons/faHospitalAlt';
+import { useNavigate } from 'react-router-dom'
 
 const Sidebar = () => {
     const [isCollapsed, setIsCollapsed] = useState(false); // State for sidebar collapse
 
     // States to control the visibility of each submenu
-    const [isHimUnitOpen, setIsHimUnitOpen] = useState(false);
-    const [isOutPatientOpen, setIsOutPatientOpen] = useState(false);
-    const [isInPatientOpen, setIsInPatientOpen] = useState(false);
-    const [isDirectRequestOpen, setIsDirectRequestOpen] = useState(false);
-
+    const [openMenu, setOpenMenu] = useState({
+        himUnit: false,
+        outPatient: false,
+        inPatient: false,
+        directRequest: false,
+    });
 
     const toggleSidebar = () => {
         setIsCollapsed(!isCollapsed);
     };
 
-    const collapsediteminmenu = (title, icon) => {
+    const navigate = useNavigate();
+
+    const collapsediteminmenu = (title, icon, endpoint) => {
         return (
-            <li className="flex items-center space-x-4 p-2 hover:bg-gray-700 rounded">
+            <li 
+                className="flex items-center space-x-4 p-2 hover:bg-gray-700 rounded cursor-pointer"
+                onClick={() => endpoint && navigate(endpoint)}
+            >
                 <div className="flex items-center space-x-4">
                     <FontAwesomeIcon icon={icon} className="text-lg" />
                     {!isCollapsed && <span>{title}</span>}
                 </div>
             </li>
         );
+    };
+
+    const toggleSubMenu = (menu) => {
+        setOpenMenu(prevState => ({
+            ...prevState,
+            [menu]: !prevState[menu],
+        }));
     };
 
     return (
@@ -72,7 +85,7 @@ const Sidebar = () => {
                 {/* HIM Unit */}
                 <li
                     className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
-                    onClick={() => setIsHimUnitOpen(!isHimUnitOpen)} // Toggle submenu
+                    onClick={() => toggleSubMenu('himUnit')} // Toggle HIM Unit submenu
                 >
                     <div className="flex items-center space-x-4">
                         <FontAwesomeIcon icon={faStethoscope} className="text-lg" />
@@ -81,24 +94,24 @@ const Sidebar = () => {
                     {!isCollapsed && (
                         <FontAwesomeIcon
                             icon={faArrowDown}
-                            className={`text-sm transform transition-transform ${isHimUnitOpen ? 'rotate-180' : ''}`}
+                            className={`text-sm transform transition-transform ${openMenu.himUnit ? 'rotate-180' : ''}`}
                         />
                     )}
                 </li>
-                {isHimUnitOpen && !isCollapsed && (
+                {openMenu.himUnit && !isCollapsed && (
                     <ul className="pl-8 space-y-2">
                         {collapsediteminmenu('HIM Dashboard', faTachometerAlt)}
+                        {collapsediteminmenu('New Patient Enrollment', faUserAlt, '/clinical/new_patient')}
                         {collapsediteminmenu('Update Patient Record', faArrowRightRotate)}
-                        {collapsediteminmenu('New Patient Registered', faUserAlt)}
+                        {collapsediteminmenu('Patients Registered List', faList)}
                         {collapsediteminmenu('Follow-up Visit', faHospitalAlt)}
-                        {collapsediteminmenu('Out-Patient Clinic', faClinicMedical)}
-                        {collapsediteminmenu('In-Patient/Wards', faBed)}
-                        {collapsediteminmenu('Direct Request', faPaperPlane)}
+
                     </ul>
                 )}
-                <li className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
-                    onClick={() => setIsOutPatientOpen(!isOutPatientOpen)} // Toggle submenu
-
+                {/* Out-Patient Clinic */}
+                <li
+                    className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
+                    onClick={() => toggleSubMenu('outPatient')} // Toggle Out-Patient submenu
                 >
                     <div className="flex items-center space-x-4">
                         <FontAwesomeIcon icon={faClinicMedical} className="text-lg" />
@@ -107,21 +120,21 @@ const Sidebar = () => {
                     {!isCollapsed && (
                         <FontAwesomeIcon
                             icon={faArrowDown}
-                            className={`text-sm transform transition-transform ${isOutPatientOpen ? 'rotate-180' : ''}`}
+                            className={`text-sm transform transition-transform ${openMenu.outPatient ? 'rotate-180' : ''}`}
                         />
                     )}
-
                 </li>
-                {isOutPatientOpen && !isCollapsed && (
+                {openMenu.outPatient && !isCollapsed && (
                     <ul className="pl-8 space-y-2">
-                        {collapsediteminmenu('Out-Patient Clinic', faClinicMedical)}
-                        {collapsediteminmenu('New Patient Registered', faUserAlt)}
-                        {collapsediteminmenu('Follow-up Visit', faHospitalAlt)}
-                        {collapsediteminmenu('Direct Request', faPaperPlane)}
+                        {collapsediteminmenu('Doctor Sign-In', faUserDoctor)}
+                        {collapsediteminmenu('Nurse Desk', faUserNurse)}
+                        
                     </ul>
                 )}
-                <li className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
-                    onClick={() => setIsInPatientOpen(!isInPatientOpen)} // Toggle submen
+                {/* In-Patient/Wards */}
+                <li
+                    className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
+                    onClick={() => toggleSubMenu('inPatient')} // Toggle In-Patient submenu
                 >
                     <div className="flex items-center space-x-4">
                         <FontAwesomeIcon icon={faBed} className="text-lg" />
@@ -130,20 +143,19 @@ const Sidebar = () => {
                     {!isCollapsed && (
                         <FontAwesomeIcon
                             icon={faArrowDown}
-                            className={`text-sm transform transition-transform ${isInPatientOpen ? 'rotate-180' : ''}`}
+                            className={`text-sm transform transition-transform ${openMenu.inPatient ? 'rotate-180' : ''}`}
                         />
                     )}
                 </li>
-                {isInPatientOpen && !isCollapsed && (
+                {openMenu.inPatient && !isCollapsed && (
                     <ul className="pl-8 space-y-2">
-                        {collapsediteminmenu('In-Patient/Wards', faBed)}
-                        {collapsediteminmenu('New Patient Registered', faUserAlt)}
-                        {collapsediteminmenu('Follow-up Visit', faHospitalAlt)}
-                        {collapsediteminmenu('Direct Request', faPaperPlane)}
+                        {collapsediteminmenu('Ward Login', faBedPulse)}
                     </ul>
                 )}
-                <li className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
-                    onClick={() => setIsDirectRequestOpen(!isDirectRequestOpen)} // Toggle submenu
+                {/* Direct Request */}
+                <li
+                    className="flex items-center justify-between p-2 hover:bg-gray-700 rounded cursor-pointer"
+                    onClick={() => toggleSubMenu('directRequest')} // Toggle Direct Request submenu
                 >
                     <div className="flex items-center space-x-4">
                         <FontAwesomeIcon icon={faPaperPlane} className="text-lg" />
@@ -152,15 +164,14 @@ const Sidebar = () => {
                     {!isCollapsed && (
                         <FontAwesomeIcon
                             icon={faArrowDown}
-                            className={`text-sm transform transition-transform ${isDirectRequestOpen ? 'rotate-180' : ''}`}
+                            className={`text-sm transform transition-transform ${openMenu.directRequest ? 'rotate-180' : ''}`}
                         />
                     )}
                 </li>
-                {isDirectRequestOpen && !isCollapsed && (
+                {openMenu.directRequest && !isCollapsed && (
                     <ul className="pl-8 space-y-2">
-                        {collapsediteminmenu('Direct Request', faPaperPlane)}
-                        {collapsediteminmenu('New Patient Registered', faUserAlt)}
-                        {collapsediteminmenu('Follow-up Visit', faHospitalAlt)}
+                        {collapsediteminmenu('New Request', faAdd)}
+                        {collapsediteminmenu('New IGR Request', faUserEdit)}
                     </ul>
                 )}
             </ul>
